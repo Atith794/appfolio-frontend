@@ -1,440 +1,3 @@
-// "use client";
-
-// import { useCallback, useEffect, useState, useMemo } from "react";
-// import ReactFlow, {
-//   Background,
-//   Controls,
-//   MiniMap,
-//   addEdge,
-//   applyEdgeChanges,
-//   applyNodeChanges,
-//   Connection,
-//   Edge,
-//   Node,
-//   NodeChange,
-//   EdgeChange,
-//   Viewport,
-// } from "reactflow";
-// import "reactflow/dist/style.css";
-// import { useAuth } from "@clerk/nextjs";
-// import { apiFetch } from "@/lib/api";
-
-// export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
-//   const { getToken } = useAuth();
-
-//   const [nodes, setNodes] = useState<Node[]>([]);
-//   const [edges, setEdges] = useState<Edge[]>([]);
-//   const [viewport, setViewport] = useState<Viewport | undefined>(undefined);
-
-//   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const nodeTypes = useMemo(
-//     () => ({
-//       rect: RectNode,
-//       db: DbNode,
-//       diamond: DiamondNode,
-//       circle: CircleNode,
-//       triangle: TriangleNode,
-//       text: TextNode,
-//     }),
-//     []
-//   );
-
-//   /** Load diagram */
-//   useEffect(() => {
-//     async function load() {
-//       try {
-//         const token = await getToken();
-//         if (!token) return;
-
-//         const data = await apiFetch(`/apps/${appId}`, {
-//           headers: { Authorization: `Bearer ${token}` },
-//           cache: "no-store",
-//         });
-
-//         const d = (data as any).app?.architectureDiagram;
-//         if (d) {
-//           setNodes(d.nodes || []);
-//           setEdges(d.edges || []);
-//           setViewport(d.viewport);
-//         }
-//       } catch (e: any) {
-//         setError(e.message || "Failed to load diagram");
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-//     load();
-//   }, [appId]);
-
-//   /** React Flow handlers */
-//   const onNodesChange = useCallback(
-//     (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
-//     []
-//   );
-
-//   const onEdgesChange = useCallback(
-//     (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-//     []
-//   );
-
-//   const onConnect = useCallback(
-//     (connection: Connection) =>
-//       setEdges((eds) => addEdge({ ...connection, animated: false }, eds)),
-//     []
-//   );
-
-//   /** Add node */
-//   function addNode() {
-//     const id = crypto.randomUUID();
-//     setNodes((nds) => [
-//       ...nds,
-//       {
-//         id,
-//         position: { x: 100, y: 100 },
-//         data: { label: "New Node" },
-//         type: 'default',
-//       },
-//     ]);
-//   }
-
-//   /** Save diagram */
-//   async function saveDiagram() {
-//     try {
-//       setSaving(true);
-//       const token = await getToken();
-//       if (!token) return;
-
-//       await apiFetch(`/apps/${appId}/architecture-diagram`, {
-//         method: "PATCH",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           nodes,
-//           edges,
-//           viewport,
-//         }),
-//       });
-
-//       alert("Architecture diagram saved");
-//     } catch (e: any) {
-//       setError(e.message || "Failed to save diagram");
-//     } finally {
-//       setSaving(false);
-//     }
-//   }
-
-//   if (loading) return <p>Loading diagram...</p>;
-
-//   return (
-//     <section style={{ marginTop: 16 }}>
-//       <div className="border-2 border-dashed border-slate-200 rounded-xl p-3">
-//         <div className="flex items-center gap-3 mb-3">
-//           <button
-//             onClick={addNode}
-//             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
-//           >
-//             + Add Node
-//           </button>
-
-//           <button
-//             onClick={saveDiagram}
-//             disabled={saving}
-//             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
-//           >
-//             {saving ? "Saving..." : "Save diagram"}
-//           </button>
-
-//           {error && <span className="text-sm text-red-600">{error}</span>}
-//         </div>
-
-//         <div style={{ height: 500 }} className="rounded-lg overflow-hidden">
-//           <ReactFlow
-//             nodes={nodes}
-//             edges={edges}
-//             onNodesChange={onNodesChange}
-//             onEdgesChange={onEdgesChange}
-//             onConnect={onConnect}
-//             onMoveEnd={(_, vp) => setViewport(vp)}
-//             fitView
-//           >
-//             <Background />
-//             <Controls />
-//             <MiniMap />
-//           </ReactFlow>
-//         </div>
-//       </div>
-//     </section>
-//   );
-// }
-
-//Iteration 2
-// "use client";
-
-// import { useCallback, useEffect, useMemo, useState } from "react";
-// import ReactFlow, {
-//   Background,
-//   Controls,
-//   MiniMap,
-//   addEdge,
-//   applyEdgeChanges,
-//   applyNodeChanges,
-//   Connection,
-//   Edge,
-//   Node,
-//   NodeChange,
-//   EdgeChange,
-//   Viewport,
-// } from "reactflow";
-// import "reactflow/dist/style.css";
-// import { useAuth } from "@clerk/nextjs";
-// import { apiFetch } from "@/lib/api";
-// import { RectNode, DbNode, DiamondNode, CircleNode, TriangleNode, TextNode } from "@/components/diagram/nodes";
-// import { toPng } from "html-to-image";
-
-// type NodeTypeKey = "rect" | "db" | "diamond" | "circle" | "triangle" | "text";
-
-// export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
-//   const { getToken } = useAuth();
-
-//   const [nodes, setNodes] = useState<Node[]>([]);
-//   const [edges, setEdges] = useState<Edge[]>([]);
-//   const [viewport, setViewport] = useState<Viewport | undefined>(undefined);
-
-//   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const nodeTypes = useMemo(
-//     () => ({
-//       rect: RectNode,
-//       db: DbNode,
-//       diamond: DiamondNode,
-//       circle: CircleNode,
-//       triangle: TriangleNode,
-//       text: TextNode,
-//     }),
-//     []
-//   );
-
-//   useEffect(() => {
-//     async function load() {
-//       try {
-//         const token = await getToken();
-//         if (!token) return;
-
-//         const data = await apiFetch(`/apps/${appId}`, {
-//           headers: { Authorization: `Bearer ${token}` },
-//           cache: "no-store",
-//         });
-
-//         const d = (data as any).app?.architectureDiagram;
-//         if (d) {
-//           setNodes(d.nodes || []);
-//           setEdges(d.edges || []);
-//           setViewport(d.viewport);
-//         }
-//       } catch (e: any) {
-//         setError(e.message || "Failed to load diagram");
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-//     load();
-//   }, [appId]);
-
-//   const onNodesChange = useCallback(
-//     (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
-//     []
-//   );
-
-//   const onEdgesChange = useCallback(
-//     (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-//     []
-//   );
-
-//   const onConnect = useCallback(
-//     (connection: Connection) =>
-//       setEdges((eds) => addEdge({ ...connection, animated: false }, eds)),
-//     []
-//   );
-
-//   function addNode(type: NodeTypeKey) {
-//     const id = crypto.randomUUID();
-//     setNodes((nds) => [
-//       ...nds,
-//       {
-//         id,
-//         type, // IMPORTANT: reactflow nodeTypes key
-//         position: { x: 120 + nds.length * 10, y: 120 + nds.length * 10 },
-//         data: { label: "" },
-//       },
-//     ]);
-//   }
-
-//   async function saveDiagram() {
-//     try {
-//       setSaving(true);
-//       const token = await getToken();
-//       if (!token) return;
-
-//       await apiFetch(`/apps/${appId}/architecture-diagram`, {
-//         method: "PATCH",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           nodes,
-//           edges,
-//           viewport,
-//         }),
-//       });
-
-//       alert("Architecture diagram saved");
-//     } catch (e: any) {
-//       setError(e.message || "Failed to save diagram");
-//     } finally {
-//       setSaving(false);
-//     }
-//   }
-
-//   async function exportPngAndUpload() {
-//     try {
-//       setError("");
-
-//       const token = await getToken();
-//       if (!token) return;
-
-//       // ReactFlow renders inside this viewport element
-//       const viewportEl = document.querySelector(".react-flow__viewport") as HTMLElement | null;
-//       if (!viewportEl) throw new Error("Diagram viewport not found");
-
-//       // Make a PNG of current viewport
-//       const dataUrl = await toPng(viewportEl, {
-//         cacheBust: true,
-//         backgroundColor: "#ffffff",
-//         pixelRatio: 2,
-//       });
-
-//       // Convert dataUrl → Blob → File
-//       const blob = await (await fetch(dataUrl)).blob();
-//       const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
-
-//       // Cloudinary signature
-//       const sig = await apiFetch("/uploads/cloudinary-signature", {
-//         method: "POST",
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       const form = new FormData();
-//       form.append("file", file);
-//       form.append("api_key", (sig as any).apiKey);
-//       form.append("timestamp", String((sig as any).timestamp));
-//       form.append("signature", (sig as any).signature);
-//       form.append("folder", (sig as any).folder);
-
-//       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-//       if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
-
-//       const uploadRes = await (await import("axios")).default.post(
-//         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-//         form
-//       );
-
-//       const imageUrl = uploadRes.data.secure_url;
-
-//       // Save image url in DB
-//       await apiFetch(`/apps/${appId}/architecture-diagram/image`, {
-//         method: "PATCH",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({ imageUrl }),
-//       });
-
-//       alert("Exported & saved PNG!");
-//     } catch (e: any) {
-//       setError(e.message || "Failed to export PNG");
-//     }
-//   }
-
-//   if (loading) return <p>Loading diagram...</p>;
-
-//   return (
-//     <section style={{ marginTop: 16 }}>
-//       <div className="border-2 border-dashed border-slate-200 rounded-xl p-3">
-//         <div className="flex flex-wrap items-center gap-2 mb-3">
-//           <button onClick={() => addNode("rect")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Rectangle
-//           </button>
-//           <button onClick={() => addNode("db")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Database
-//           </button>
-//           <button onClick={() => addNode("diamond")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Decision
-//           </button>
-//           <button onClick={() => addNode("circle")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Circle
-//           </button>
-//           <button onClick={() => addNode("triangle")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Triangle
-//           </button>
-//           <button onClick={() => addNode("text")} className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20">
-//             Text
-//           </button>
-
-//           <div className="w-4" />
-
-//           <button
-//             onClick={saveDiagram}
-//             disabled={saving}
-//             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
-//           >
-//             {saving ? "Saving..." : "Save diagram"}
-//           </button>
-
-//           <button
-//             onClick={exportPngAndUpload}
-//             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
-//           >
-//             Export PNG
-//           </button>
-
-//           {error && <span className="text-sm text-red-600">{error}</span>}
-//         </div>
-
-//         <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
-//           <ReactFlow
-//             nodeTypes={nodeTypes}
-//             nodes={nodes}
-//             edges={edges}
-//             onNodesChange={onNodesChange}
-//             onEdgesChange={onEdgesChange}
-//             onConnect={onConnect}
-//             onMoveEnd={(_, vp) => setViewport(vp)}
-//             fitView
-//           >
-//             <Background />
-//             <Controls />
-//             <MiniMap />
-//           </ReactFlow>
-//         </div>
-
-//         <p className="mt-2 text-xs text-slate-500">
-//           Tip: Double-click any node text to edit.
-//         </p>
-//       </div>
-//     </section>
-//   );
-// }
-
-// Iteration 3
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
@@ -475,7 +38,7 @@ import { toPng } from "html-to-image";
 import { AlignCenter, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalDistributeCenter, AlignLeft, AlignRight, AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter, Circle, Cloud, Database, Diamond, RectangleHorizontal, Redo, Triangle, Type, Undo } from 'lucide-react';
 
 type NodeTypeKey = "rect" | "db" | "diamond" | "circle" | "triangle" | "text" | "cloud";
-
+type UserFlowMode = "TEXT" | "DIAGRAM" | "BOTH";
 const FILL_COLORS = [
   { name: "Default", value: "#ffffff" },
   { name: "Gray", value: "#f1f5f9" },
@@ -498,7 +61,7 @@ const BORDER_COLORS = [
   { name: "Purple", value: "#a78bfa" },
 ];
 
-export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
+export function UserFlowDiagramPanel({ appId }: { appId: string }) {
   const { getToken } = useAuth();
 
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -518,8 +81,10 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     nodes: [],
     edges: [],
   });
+  const [flowMode, setFlowMode] = useState<UserFlowMode>("BOTH");
+  const [bullets, setBullets] = useState<string[]>([]);
+  const [savingText, setSavingText] = useState(false);
   const rfInstance = useRef<ReactFlowInstance | null>(null);
-  // const { fitView, setViewport } = useReactFlow();
 
   function snapshot(): DiagramSnapshot {
     return {
@@ -557,6 +122,36 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     []
   );
 
+  async function saveUserFlowText() {
+    try {
+        setSavingText(true);
+        setError("");
+
+        const token = await getToken();
+        if (!token) return;
+
+        const cleaned = bullets.map((b) => b.trim()).filter(Boolean);
+
+        await apiFetch(`/apps/${appId}/user-flow-text`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            mode: flowMode,
+            bullets: cleaned,
+        }),
+        });
+
+        alert("User flow text saved");
+    } catch (e: any) {
+        setError(e.message || "Failed to save user flow text");
+    } finally {
+        setSavingText(false);
+    }
+  }
+
   useEffect(() => {
     async function load() {
       try {
@@ -568,7 +163,14 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
           cache: "no-store",
         });
 
-        const d = (data as any).app?.architectureDiagram;
+        const d = (data as any).app?.userFlowDiagram;
+        const t = (data as any).app?.userFlowText;
+
+        if (t) {
+            setFlowMode((t.mode as UserFlowMode) || "BOTH");
+            setBullets(Array.isArray(t.bullets) ? t.bullets : []);
+        }
+
         if (d) {
           setNodes(d.nodes || []);
           setEdges(d.edges || []);
@@ -593,20 +195,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     []
   );
 
-  //Recent working version
-  // const onConnect = useCallback((connection: Connection) => {
-  //   setEdges((eds) =>
-  //     addEdge(
-  //       {
-  //         ...connection,
-  //         type: "smoothstep",
-  //         markerEnd: { type: MarkerType.ArrowClosed },
-  //         animated: false,
-  //       },
-  //       eds
-  //     )
-  //   );
-  // }, []);
   const onConnect = useCallback(
     (connection: Connection) => {
       pushHistory();
@@ -644,10 +232,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
       cloud: { width: 220, height: 140 },
     };
 
-    // if (type === "circle") {
-    //   style: { width: 140; height: 140 }
-    // }
-
     setNodes((nds) => [
       ...nds,
       {
@@ -684,20 +268,21 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
       const token = await getToken();
       if (!token) return;
 
-      await apiFetch(`/apps/${appId}/architecture-diagram`, {
+      await apiFetch(`/apps/${appId}/user-flow-diagram`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          version: 1,
           nodes,
           edges,
           viewport,
         }),
       });
 
-      alert("Architecture diagram saved");
+      alert("User flow diagram saved");
     } catch (e: any) {
       setError(e.message || "Failed to save diagram");
     } finally {
@@ -729,74 +314,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     );
   }
 
-  // async function exportPngAndUpload() {
-  //   try {
-  //     setError("");
-  //     setExporting(true);
-
-  //     const token = await getToken();
-  //     if (!token) return;
-
-  //     // Capture the whole react-flow root (includes edges + markers reliably)
-  //     const root = document.querySelector(".react-flow") as HTMLElement | null;
-  //     if (!root) throw new Error("Diagram root not found");
-
-  //     const dataUrl = await toPng(root, {
-  //       cacheBust: true,
-  //       backgroundColor: "#ffffff",
-  //       pixelRatio: 2,
-  //       filter: (node) => {
-  //         const el = node as HTMLElement;
-  //         const cls = el.classList;
-  //         // exclude UI overlays
-  //         if (cls?.contains("react-flow__controls")) return false;
-  //         if (cls?.contains("react-flow__minimap")) return false;
-  //         return true;
-  //       },
-  //     });
-
-  //     const blob = await (await fetch(dataUrl)).blob();
-  //     const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
-
-  //     const sig = await apiFetch("/uploads/cloudinary-signature", {
-  //       method: "POST",
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const form = new FormData();
-  //     form.append("file", file);
-  //     form.append("api_key", (sig as any).apiKey);
-  //     form.append("timestamp", String((sig as any).timestamp));
-  //     form.append("signature", (sig as any).signature);
-  //     form.append("folder", (sig as any).folder);
-
-  //     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  //     if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
-
-  //     const uploadRes = await (await import("axios")).default.post(
-  //       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-  //       form
-  //     );
-
-  //     const imageUrl = uploadRes.data.secure_url;
-
-  //     await apiFetch(`/apps/${appId}/architecture-diagram/image`, {
-  //       method: "PATCH",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({ imageUrl }),
-  //     });
-
-  //     alert("Exported & saved PNG!");
-  //   } catch (e: any) {
-  //     setError(e.message || "Failed to export PNG");
-  //   } finally {
-  //     setExporting(false);
-  //   }
-  // }
-
   function setExportMode(on: boolean) {
     const root = document.querySelector(".react-flow");
     if (!root) return;
@@ -805,79 +322,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     else root.classList.remove("exporting");
   }
 
-  // async function exportPngAndUpload() {
-  //   try {
-  //     setError("");
-  //     setExporting(true);
-
-  //     const token = await getToken();
-  //     if (!token) return;
-
-  //     // Add class to hide handles/UI & enforce edge stroke in export
-  //     document.documentElement.classList.add("exporting-diagram");
-
-  //     // Capture renderer (better than root)
-  //     const renderer = document.querySelector(".react-flow__renderer") as HTMLElement | null;
-  //     if (!renderer) throw new Error("Diagram renderer not found");
-
-  //     const { toBlob } = await import("html-to-image");
-
-  //     const blob = await toBlob(renderer, {
-  //       cacheBust: true,
-  //       backgroundColor: "#ffffff",
-  //       pixelRatio: 2,
-  //       filter: (node) => {
-  //         const el = node as HTMLElement;
-  //         const cls = el.classList;
-  //         if (cls?.contains("react-flow__controls")) return false;
-  //         if (cls?.contains("react-flow__minimap")) return false;
-  //         return true;
-  //       },
-  //     });
-
-  //     if (!blob) throw new Error("Failed to render image");
-
-  //     const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
-
-  //     const sig = await apiFetch("/uploads/cloudinary-signature", {
-  //       method: "POST",
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const form = new FormData();
-  //     form.append("file", file);
-  //     form.append("api_key", (sig as any).apiKey);
-  //     form.append("timestamp", String((sig as any).timestamp));
-  //     form.append("signature", (sig as any).signature);
-  //     form.append("folder", (sig as any).folder);
-
-  //     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  //     if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
-
-  //     const uploadRes = await (await import("axios")).default.post(
-  //       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-  //       form
-  //     );
-
-  //     const imageUrl = uploadRes.data.secure_url;
-
-  //     await apiFetch(`/apps/${appId}/architecture-diagram/image`, {
-  //       method: "PATCH",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({ imageUrl }),
-  //     });
-
-  //     alert("Exported & saved PNG!");
-  //   } catch (e: any) {
-  //     setError(e.message || "Failed to export PNG");
-  //   } finally {
-  //     document.documentElement.classList.remove("exporting-diagram");
-  //     setExporting(false);
-  //   }
-  // }
   async function exportPngAndUpload() {
     try {
       setError("");
@@ -891,16 +335,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
 
       // 1️⃣ Enter export mode (hide UI)
       setExportMode(true);
-
-      // 2️⃣ Fit all nodes nicely
-      //  = getNodesBounds(nodes);
-      // const viewport = getViewportForBounds(
-      //   bounds,
-      //   800,
-      //   600,const bounds
-      //   0.15, // padding
-      //   2     // zoom limit
-      // );
 
       // setViewport(viewport, { duration: 300 });
       const instance = rfInstance.current;
@@ -1197,7 +631,28 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
 
   return (
     <section style={{ marginTop: 16 }}>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="text-xs font-semibold text-slate-600 mr-2">User Flow Mode</span>
+
+            {(["DIAGRAM", "TEXT", "BOTH"] as const).map((m) => (
+                <button
+                key={m}
+                onClick={() => setFlowMode(m)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border ${
+                    flowMode === m
+                    ? "bg-primary/15 border-primary/40 text-primary"
+                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                }`}
+                >
+                {m === "DIAGRAM" ? "Diagram" : m === "TEXT" ? "Text" : "Both"}
+                </button>
+            ))}
+
+            <div className="w-4" />
+            
+      </div>  
       <div className="border-2 border-dashed border-slate-200 rounded-xl p-3">
+        
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             title="Rectangle" 
@@ -1251,8 +706,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
           </button>
 
           <div className="w-4" />
-
-          
 
           <button
             title="Undo"
@@ -1356,19 +809,19 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
             {saving ? "Saving..." : "Save diagram"}
           </button>
 
-          <button
+          {/* <button
             onClick={exportPngAndUpload}
             disabled={exporting}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60"
           >
             {exporting ? "Exporting..." : "Export PNG"}
-          </button>
+          </button> */}
 
           {error && <span className="text-sm text-red-600">{error}</span>}
 
         </div>
-
-        <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
+            
+        {/* <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
           <ReactFlow
             nodeTypes={nodeTypes}
             nodes={nodes}
@@ -1399,7 +852,132 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
             <Controls />
             <MiniMap />
           </ReactFlow>
-        </div>
+        </div> */}
+        {flowMode !== "DIAGRAM" && (
+                <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-slate-800">User Flow Steps</p>
+                    <button
+                        type="button"
+                        onClick={() => setBullets((b) => [...b, ""])}
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                        + Add step
+                    </button>
+                    </div>
+
+                    {bullets.length === 0 ? (
+                    <p className="text-xs text-slate-500">Add 3–10 steps like “Login → Home → Create Post → Publish”.</p>
+                    ) : (
+                    <div className="space-y-2">
+                        {bullets.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                            <div className="mt-2 text-xs font-semibold text-slate-500 w-6">{idx + 1}.</div>
+
+                            <textarea
+                            value={step}
+                            onChange={(e) =>
+                                setBullets((arr) => arr.map((x, i) => (i === idx ? e.target.value : x)))
+                            }
+                            rows={2}
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-primary/25"
+                            placeholder="Describe the step..."
+                            />
+
+                            <div className="flex flex-col gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                setBullets((arr) => arr.filter((_, i) => i !== idx))
+                                }
+                                className="px-2 py-1 rounded-md text-xs bg-danger/10 text-danger hover:bg-danger/20"
+                                title="Remove"
+                            >
+                                ✕
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                setBullets((arr) => {
+                                    if (idx === 0) return arr;
+                                    const copy = [...arr];
+                                    [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                    return copy;
+                                })
+                                }
+                                className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                title="Move up"
+                            >
+                                ↑
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                setBullets((arr) => {
+                                    if (idx === arr.length - 1) return arr;
+                                    const copy = [...arr];
+                                    [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+                                    return copy;
+                                })
+                                }
+                                className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                title="Move down"
+                            >
+                                ↓
+                            </button>
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                    )}
+                    {flowMode !== "DIAGRAM" && <button
+                        onClick={saveUserFlowText}
+                        disabled={savingText}
+                        className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60"
+                    >
+                        {savingText ? "Saving..." : "Save text"}
+                    </button>}
+                </div>
+            )}
+
+            
+        
+        {flowMode !== "TEXT" && (
+            <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
+                <ReactFlow
+                    nodeTypes={nodeTypes}
+                    nodes={nodes}
+                    edges={edges}
+                    defaultEdgeOptions={defaultEdgeOptions}
+                    connectionLineType="smoothstep"
+                    connectionRadius={30}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onMoveEnd={(_, vp) => setViewports(vp)}
+                    // fitView
+                    // isValidConnection={isValidConnection}
+                    onNodeDragStop={onNodeDragStop}
+                    onSelectionChange={onSelectionChange}
+                    fitView
+                    selectionOnDrag
+                    selectionMode={SelectionMode.Partial}
+                    snapToGrid
+                    snapGrid={[10, 10]}
+                    nodesDraggable
+                    nodeDragThreshold={8}
+                    onInit={(instance) => {
+                        rfInstance.current = instance;
+                    }}
+                >
+                <Background />
+                <Controls />
+                <MiniMap />
+            </ReactFlow>
+            </div>
+        )}
 
         <p className="mt-2 text-xs text-slate-500">
           Tip: Double-click any node text to edit.

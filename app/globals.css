@@ -118,3 +118,17 @@ html.exporting-diagram .react-flow__edge-path {
 .react-flow__resize-control.handle:hover {
   transform: scale(1.05);
 }
+
+/* ===== React Flow export mode ===== */
+.react-flow.exporting .react-flow__handle,
+.react-flow.exporting .react-flow__resize-control,
+.react-flow.exporting .react-flow__selection,
+.react-flow.exporting .react-flow__controls,
+.react-flow.exporting .react-flow__minimap {
+  display: none !important;
+}
+
+/* Hide connection preview line */
+.react-flow.exporting .react-flow__connection {
+  display: none !important;
+}

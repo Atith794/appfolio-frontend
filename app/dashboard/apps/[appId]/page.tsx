@@ -5,6 +5,7 @@ import { AppHeroPanel } from "@/components/AppHeroPanel";
 import { AppOverviewPanel } from "@/components/AppOverviewPanel";
 import { ChallengesTradeoffsPanel } from "@/components/ChallengesTradeoffsPanel";
 import { ArchitectureDiagramPanel } from "@/components/ArchitectureDiagramPanel";
+import { UserFlowDiagramPanel } from "@/components/UserFlowDiagramPanel";
 
 export default async function AppManagePage({ 
   params 
@@ -29,7 +30,10 @@ export default async function AppManagePage({
       <h2 className="text-black text-xl font-black tracking-tight font-serif">Screenshots</h2>   
         <ScreenshotsPanel appId={appId} />
       <hr className="border-t-3 border-dotted border-primary/50 my-8" />
-      
+      <h2 className="text-black text-xl font-black tracking-tight font-serif">User Flow</h2>
+        <UserFlowDiagramPanel appId={appId} />
+      <hr className="border-t-3 border-dotted border-primary/50 my-8" />
+
       {/* CHallenges and Tradeoffs panel */}
       <h2 className="text-black text-xl font-black tracking-tight font-serif">
         Challenges & Tradeoffs
