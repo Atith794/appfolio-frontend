@@ -1,0 +1,117 @@
+Perfect — I’ll do both in one go:
+
+1️⃣ Final, production-ready landing page copy (you can paste this straight into your code)
+2️⃣ A visual mock-style representation of how this landing page feels
+
+✅ FINAL LANDING PAGE COPY (LOCKED)
+🔹 Hero Section (Above the Fold)
+
+Headline
+Showcase your mobile app like a real product.
+
+Sub-headline
+Appfolio helps developers present their mobile apps with screens, flows, architecture, and decisions — all in one professional, shareable page.
+
+Primary CTA
+👉 Create your Appfolio
+
+Secondary CTA
+View example →
+
+🔹 Social Proof / Trust Hint (small, subtle)
+
+Used by indie developers, job seekers, and product engineers to showcase real-world apps.
+
+🔹 Problem Section — “Why GitHub Isn’t Enough”
+
+Your app deserves more than screenshots and repos.
+
+GitHub shows code, not product thinking
+
+Recruiters won’t install your app to “check it out”
+
+Screens are scattered across Drive and README files
+
+There’s no place to explain architecture or trade-offs
+
+👉 Result: your work looks smaller than it actually is.
+
+🔹 Solution Section — What Appfolio Does
+
+Appfolio turns your app into a product case study.
+
+With Appfolio, you can:
+
+Group screens by onboarding, features, and edge cases
+
+Explain user flows visually
+
+Highlight architecture and tech decisions
+
+Share real challenges and trade-offs
+
+Send one clean link to recruiters or clients
+
+No fluff. No marketing nonsense. Just clarity.
+
+🔹 What You Can Showcase (Feature Snapshot)
+
+Everything that matters — in one place
+
+App Overview – what you built and why
+
+Screens Gallery – real UI, grouped logically
+
+User Flow – how users move through your app
+
+Tech Stack – frontend, backend, infra
+
+Architecture – visual system design
+
+Challenges & Trade-offs – real engineering experience
+
+🔹 Who Appfolio Is For
+
+Built for developers. Loved by reviewers.
+
+👨‍💻 Job seekers
+Stand out beyond GitHub and resumes.
+
+🚀 Indie developers
+Showcase MVPs and side projects professionally.
+
+🏢 Freelancers & agencies
+Present client apps clearly and confidently.
+
+🔹 Example Appfolio Page
+
+See a real Appfolio in action.
+Explore how a complete app is presented — screens, flows, architecture, and decisions.
+
+👉 View sample Appfolio
+
+🔹 How It Works
+
+Three simple steps
+
+Create your app
+
+Add screens & details
+
+Share your Appfolio link
+
+That’s it.
+
+🔹 Pricing Teaser
+
+Free to get started.
+Upgrade when you want advanced showcasing features.
+
+👉 View pricing →
+
+🔹 Final CTA
+
+Your app deserves more than a README.
+
+👉 Create your Appfolio
+View example →

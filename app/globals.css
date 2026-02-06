@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -23,4 +23,98 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+} */
+
+:root {
+  --primary-color: #6366f1;
+  /* --background-dark: #121214; */
+  --background-dark: #fffefe;
+  /* --panel-bg: #1e1e24; */
+  --panel-bg: #1e1e24;
+
+  /* --accent: "#8b5cf6"; */
+}
+
+@theme {
+  /* --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono); */
+  --color-primary: #6366f1;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-muted: #94a3b8;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+.dashboard-ui-preview {
+  background: linear-gradient(145deg, #1e1e24, #121214);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+body {
+  background-color: var(--background-dark);
+  color: #ffffff;
+  /* color: #000000; */
+
+}
+
+/* Hide connection dots & selection UI during export */
+html.exporting-diagram .react-flow__handle,
+html.exporting-diagram .react-flow__selection,
+html.exporting-diagram .react-flow__nodesselection,
+html.exporting-diagram .react-flow__selectionpane {
+  opacity: 0 !important;
+}
+
+/* Make sure edge strokes render strong during export */
+html.exporting-diagram .react-flow__edge-path {
+  stroke: #111 !important;
+  stroke-width: 2px !important;
+  fill: none !important;
+}
+
+.react-flow__handle {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.react-flow__node:hover .react-flow__handle {
+  opacity: 1;
+}
+
+/* Bigger, easier resize handles */
+.react-flow__resize-control.handle {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 6px !important;
+  border: 2px solid #64748b !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* Make it obvious it's resizable */
+.react-flow__resize-control.handle:hover {
+  transform: scale(1.05);
+}
+
+/* Bigger, easier resize handles */
+.react-flow__resize-control.handle {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 6px !important;
+  border: 2px solid #64748b !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* Make it obvious it's resizable */
+.react-flow__resize-control.handle:hover {
+  transform: scale(1.05);
 }
