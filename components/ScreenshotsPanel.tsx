@@ -7,7 +7,7 @@ import { apiFetch, API_BASE } from "@/lib/api";
 import { ImageViewerModal } from "@/components/ImageViewerModal";
 import { makeCroppedCloudinaryUrl } from "@/lib/cloudinary";
 import { redirect } from "next/navigation";
-import { Info, MoveDown, MoveLeft, MoveRight, MoveUp, Trash2, GripVertical } from 'lucide-react'
+import { Info, MoveDown, MoveLeft, MoveRight, MoveUp, Trash2, GripVertical, Eye } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,8 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { PhoneFrame } from "./PhoneFrame";
+import { FramedPreviewModal } from "@/components/FramedPreviewModal";
 
 type Screenshot = {
   _id: string;
@@ -46,6 +48,8 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selected, setSelected] = useState<Screenshot | null>(null);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [framePreviewOpen, setFramePreviewOpen] = useState(false);
+  const [frameIndex, setFrameIndex] = useState(0);
 
   const limitReached = screenshotsUsed >= screenshotLimit;
 
@@ -396,20 +400,30 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                       <div className="text-xl font-semibold text-primary font-serif">
                         {s.order}.
                       </div>
-
-                      {/* Drag handle (ONLY this starts dragging) */}
-                      <button
-                        type="button"
-                        {...handleProps}
-                        className="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 cursor-grab active:cursor-grabbing touch-none"
-                        title="Drag to reorder"
-                        aria-label="Drag to reorder"
-                      >
-                        <GripVertical size={18} />
-                      </button>
+                      <div>
+                        <button
+                          title="Preview"
+                          type="button"
+                          onClick={() => {
+                            setFrameIndex(idx);
+                            setFramePreviewOpen(true);
+                          }}
+                          className="px-4 py-2 my-5 rounded-lg text-sm font-medium text-primary hover:bg-slate-200 cursor-pointer"
+                        >
+                          <Eye />
+                        </button>
+                        {/* Drag handle (ONLY this starts dragging) */}
+                        <button
+                          type="button"
+                          {...handleProps}
+                          className="p-2 rounded-lg text-primary hover:text-primary hover:bg-primary/10 cursor-grab active:cursor-grabbing touch-none"
+                          title="Drag to reorder"
+                          aria-label="Drag to reorder"
+                        >
+                          <GripVertical size={18} />
+                        </button>
+                      </div>
                     </div>
-
-                    {/* Your existing content */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
                       <div className="flex items-center gap-2">
                         <img
@@ -443,7 +457,6 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                           onClick={() => move(idx, 1)}
                           className="px-4 py-2 my-5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
                         >
-                          {/* <MoveRight size={18} /> */}
                           <span className="block min-[581px]:hidden"><MoveDown size={18}/></span>
                           <span className="hidden min-[581px]:block"><MoveRight size={18}/></span>
                         </button>
@@ -512,6 +525,40 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
           setScreenshots((data as any).screenshots || []);
         }}
       />
+
+      <FramedPreviewModal
+        open={framePreviewOpen}
+        images={sorted.map((x) => x.url)}
+        startIndex={frameIndex}
+        onClose={() => setFramePreviewOpen(false)}
+        onSaveCrop={async (index, cropPixels, zoom) => {
+          const token = await getToken();
+          if (!token) return;
+
+          const target = sorted[index];
+          if (!target) return;
+
+          // IMPORTANT: your makeCroppedCloudinaryUrl currently only takes cropPixels.
+          // zoom doesn't matter for the final pixels, so we can ignore zoom here.
+          const newUrl = makeCroppedCloudinaryUrl(target.url, cropPixels);
+
+          const data = await apiFetch(`/apps/${appId}/screenshots/${target._id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              url: newUrl,
+              width: Math.round(cropPixels.width),
+              height: Math.round(cropPixels.height),
+            }),
+          });
+
+          setScreenshots((data as any).screenshots || []);
+        }}
+      />
+
     </section>
   );
 }

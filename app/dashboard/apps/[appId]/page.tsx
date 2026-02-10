@@ -6,6 +6,8 @@ import { AppOverviewPanel } from "@/components/AppOverviewPanel";
 import { ChallengesTradeoffsPanel } from "@/components/ChallengesTradeoffsPanel";
 import { ArchitectureDiagramPanel } from "@/components/ArchitectureDiagramPanel";
 import { UserFlowDiagramPanel } from "@/components/UserFlowDiagramPanel";
+import { TechStackPanel } from "@/components/TechStackPanel";
+import { IntegrationsPanel } from "@/components/IntegrationsPanel";
 
 export default async function AppManagePage({ 
   params 
@@ -28,7 +30,13 @@ export default async function AppManagePage({
       
       {/* Screenshots panel */}
       <h2 className="text-black text-xl font-black tracking-tight font-serif">Screenshots</h2>   
-        <ScreenshotsPanel appId={appId} />
+      <ScreenshotsPanel appId={appId} />
+      <hr className="border-t-3 border-dotted border-primary/50 my-8" />
+      <h2 className="text-black text-xl font-black tracking-tight font-serif">Tech Stack</h2>
+      <TechStackPanel appId={appId} />
+      <hr className="border-t-3 border-dotted border-primary/50 my-8" />
+      <h2 className="text-black text-xl font-black tracking-tight font-serif">Integrations & Key Decisions</h2>
+      <IntegrationsPanel appId={appId} />
       <hr className="border-t-3 border-dotted border-primary/50 my-8" />
       <h2 className="text-black text-xl font-black tracking-tight font-serif">User Flow</h2>
         <UserFlowDiagramPanel appId={appId} />
