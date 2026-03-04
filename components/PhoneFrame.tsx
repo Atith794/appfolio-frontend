@@ -133,7 +133,7 @@ export function PhoneFrame({
           <Notch type={notch} />
 
           <img
-            src={src}
+            src={src ? src:undefined}
             alt={alt}
             className={`h-full w-full ${fit === "cover" ? "object-cover" : "object-contain bg-black"}`}
             loading="lazy"

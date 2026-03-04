@@ -42,8 +42,8 @@ export function ImageViewerModal({
   const canNext = index < images.length - 1;
 
   const canSave = useMemo(
-    () => !!croppedAreaPixels && !!imageUrl, 
-    [croppedAreaPixels, imageUrl]
+    () => !viewerOnly && !!croppedAreaPixels && !!imageUrl, 
+    [viewerOnly, croppedAreaPixels, imageUrl]
   );
 
   // Keyboard navigation
@@ -157,16 +157,51 @@ export function ImageViewerModal({
               style={{
                 position: "absolute",
                 inset: 0,
-                overflow: "auto",
+                // overflow: "auto",
+                overflow: "hidden",
                 display: "grid",
                 placeItems: "center",
-                padding:"16"
+                padding: 16
               }}
             >
                <div
+                // style={{
+                //   width: "min(420px, 92vw)",    
+                //   aspectRatio: String(aspect),  
+                //   overflow: "hidden",
+                //   borderRadius: 14,
+                //   border: "1px solid rgba(255,255,255,0.12)",
+                //   background: "#000",
+                //   position: "relative",
+                //   transform: `scale(${zoom})`,
+                //   transformOrigin: "center",
+                // }}
+
+                //V2
+                // style={{
+                //   // ✅ Fit inside modal without scrolling
+                //   maxHeight: "calc(97vh - 170px)", // 97vh matches your modal height, 170px ≈ footer + padding
+                //   width: "min(70vw, 420px)",
+                //   aspectRatio: String(aspect),
+
+                //   // ✅ Key: let height constrain the box
+                //   height: "auto",
+
+                //   overflow: "hidden",
+                //   borderRadius: 14,
+                //   border: "1px solid rgba(255,255,255,0.12)",
+                //   background: "#000",
+                //   position: "relative",
+                //   transform: `scale(${zoom})`,
+                //   transformOrigin: "center",
+                // }}
+
+                //V3
                 style={{
-                  width: "min(420px, 92vw)",    
-                  aspectRatio: String(aspect),  
+                  height: "min(calc(97vh - 170px), 520px)", // ✅ always fits; tweak 520 if you want bigger
+                  aspectRatio: String(aspect),
+                  width: "auto", // width is derived from height + aspectRatio
+
                   overflow: "hidden",
                   borderRadius: 14,
                   border: "1px solid rgba(255,255,255,0.12)",
@@ -229,7 +264,10 @@ export function ImageViewerModal({
             type="button"
             onClick={() => {
               setZoom(1);
-              if (!viewerOnly) setCrop({ x: 0, y: 0 });
+              if (!viewerOnly) {
+                setCrop({ x: 0, y: 0 });
+                setCroppedAreaPixels(null);
+              };
             }}
             style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #333", color: "#fff", background: "transparent" }}
           >

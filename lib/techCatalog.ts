@@ -1,4 +1,16 @@
-export type TechCategory = "frontend" | "backend" | "database" | "infra" ;
+export type TechCategory = 
+"frontend" 
+| "backend" 
+| "database" 
+| "infra"
+| "auth"
+| "storage"
+| "cicd"
+| "observability"
+| "messaging"
+| "maps"
+| "payments"
+| "cont&orch";
 
 //Proposed types to be included
 // | "auth" | "iac" | "cont&orch" | "cicd" | "mo&ob" ;
@@ -45,7 +57,7 @@ export const TECH_CATALOG: TechItem[] = [
   { id: "dotnetcore", name: "Dotnet Core", category: "backend", iconClass: "devicon-dotnetcore-plain colored" },
   { id: "golang", name: "Go Lang", category: "backend", iconClass: "devicon-go-original-wordmark colored" },
   { id: "appwrite", name: "Appwrite", category: "backend", iconClass: "devicon-appwrite-original colored" },
-  { id: "ionic", name: "Ionic", category: "backend", iconClass: "devicon-ionic-original colored" },
+  { id: "ionicBackend", name: "Ionic", category: "backend", iconClass: "devicon-ionic-original colored" },
   { id: "firebase", name: "Firebase", category: "backend", iconClass: "devicon-firebase-plain-wordmark colored" },
 
   // Database
@@ -58,7 +70,7 @@ export const TECH_CATALOG: TechItem[] = [
   { id: "sqlite", name: "SQLite", category: "database", iconClass: "devicon-sqlite-plain colored" },
   { id: "realm", name: "Realm", category: "database", iconClass: "devicon-realm-plain colored" },
   { id: "couchbase", name: "Couchbase", category: "database", iconClass: "devicon-couchbase-original colored" },
-  { id: "supabase", name: "Supabase", category: "database", iconClass: "devicon-supabase-plain colored" },
+  { id: "supabasedb", name: "Supabase", category: "database", iconClass: "devicon-supabase-plain colored" },
   { id: "microsoftsqlserver", name: "Microsoft SQL Server", category: "database", iconClass: "devicon-microsoftsqlserver-plain colored" },
   { id: "neo4j", name: "Neo4j", category: "database", iconClass: "devicon-neo4j-plain colored" },
   { id: "azuresqldatabase", name: "Azure Sql Database", category: "database", iconClass: "devicon-azuresqldatabase-plain colored" },
@@ -97,3 +109,7 @@ export const TECH_CATALOG: TechItem[] = [
   // { id: "supabaseauth", name: "Supabase Auth", category: "backend", iconClass: "devicon-supabase-plain colored" },
   
 ];
+
+
+export const TECH_BY_ID: Record<string, TechItem> =
+  Object.fromEntries(TECH_CATALOG.map((t) => [t.id, t]));

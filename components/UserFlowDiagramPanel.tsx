@@ -36,6 +36,7 @@ import {
 } from "@/components/diagram/nodes";
 import { toPng } from "html-to-image";
 import { AlignCenter, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalDistributeCenter, AlignLeft, AlignRight, AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter, Circle, Cloud, Database, Diamond, RectangleHorizontal, Redo, Triangle, Type, Undo } from 'lucide-react';
+import { TECH_CATALOG, TechCategory } from "@/lib/techCatalog";
 
 type NodeTypeKey = "rect" | "db" | "diamond" | "circle" | "triangle" | "text" | "cloud";
 type UserFlowMode = "TEXT" | "DIAGRAM" | "BOTH";
@@ -150,6 +151,14 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
     } finally {
         setSavingText(false);
     }
+  }
+
+  function getTechByKey(key: string) {
+    for (const cat of Object.keys(TECH_CATALOG) as TechCategory[]) {
+      const found = TECH_CATALOG[cat].find((t) => t.key === key);
+      if (found) return { ...found, category: cat };
+    }
+    return null;
   }
 
   useEffect(() => {

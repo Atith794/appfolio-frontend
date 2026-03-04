@@ -6,6 +6,7 @@ import axios from "axios";
 import { apiFetch } from "@/lib/api";
 import { Info } from "lucide-react";
 import { ImageViewerModal } from "./ImageViewerModal";
+import { redirect } from "next/navigation";
 
 type AppHero = {
   name: string;
@@ -149,6 +150,7 @@ export function AppHeroPanel({ appId }: { appId: string }) {
   return (
     <section style={{ marginTop: 16 }}>
       <div className="grid gap-4 md:grid-cols-[140px_1fr] items-start">
+       
         {/* Icon */}
         <div className="flex flex-col gap-2">
           <div className="w-[120px] h-[120px] rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden bg-white flex items-center justify-center">
@@ -259,7 +261,7 @@ export function AppHeroPanel({ appId }: { appId: string }) {
         </div>
         <ImageViewerModal
           open={viewerOpen}
-          images={[hero.appIconUrl]}
+          images={[hero?.appIconUrl]}
           startIndex={0}
           onClose={() => setViewerOpen(false)}
           onSaveCrop={

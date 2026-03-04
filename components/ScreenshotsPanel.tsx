@@ -33,6 +33,13 @@ type Screenshot = {
   height?: number;
   order: number;
   caption?: string;
+  groupKey?: string;
+};
+
+type ScreenshotGroup = {
+  key: string;
+  title: string;
+  description?: string;
 };
 
 export function ScreenshotsPanel({ appId }: { appId: string }) {
@@ -50,6 +57,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [framePreviewOpen, setFramePreviewOpen] = useState(false);
   const [frameIndex, setFrameIndex] = useState(0);
+  const [screenshotGroups, setScreenshotGroups] = useState<ScreenshotGroup[]>([]);
 
   const limitReached = screenshotsUsed >= screenshotLimit;
 
@@ -74,6 +82,8 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
       const meta = (data as any).meta;
 
       setScreenshots(((data as any).app?.screenshots || []) as Screenshot[]);
+      setScreenshotGroups(((data as any).app?.screenshotGroups || []) as ScreenshotGroup[]);
+
       if (meta?.plan) setPlan(meta.plan);
       if (meta?.screenshotLimit) setScreenshotLimit(meta.screenshotLimit);
       if (typeof meta?.screenshotsUsed === "number") setScreenshotsUsed(meta.screenshotsUsed);
@@ -154,6 +164,62 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
       setUploading(false);
       await load();
     }
+  }
+
+  function slugify(s: string) {
+    return String(s || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  async function createGroupSafe(title: string, description: string) {
+    const token = await getToken();
+    if (!token) return;
+
+    const base = slugify(title) || "group";
+    let key = base;
+
+    for (let i = 1; i <= 10; i++) {
+      try {
+        await apiFetch(`/apps/${appId}/screenshot-groups`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            key,
+            title,
+            description,
+          }),
+        });
+
+        return; // ✅ success
+      } catch (err: any) {
+        // If backend returned 409 (group key exists)
+        if (err?.message?.includes("409") || err?.message?.includes("exists")) {
+          key = `${base}-${i + 1}`;
+          continue;
+        }
+
+        console.error("Create group error:", err);
+        alert("Failed to create group");
+        throw err;
+      }
+    }
+
+    alert("Could not create a unique group key. Try a different title.");
+  }
+
+  function uniqueKey(base: string, existing: Set<string>) {
+    if (!existing.has(base)) return base;
+    for (let i = 2; i <= 50; i++) {
+      const k = `${base}-${i}`;
+      if (!existing.has(k)) return k;
+    }
+    return `${base}-${Date.now()}`;
   }
 
   function move(index: number, dir: -1 | 1) {
@@ -284,6 +350,48 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
     setScreenshots(rearranged);
   }
 
+  const groupedForUI = useMemo(() => {
+    if (plan !== "PRO") return null;
+
+    const groupsByKey = new Map(screenshotGroups.map(g => [g.key, g]));
+    const buckets = new Map<string, Screenshot[]>();
+
+    for (const shot of sorted) {
+      const key = shot.groupKey?.trim() || "";
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(shot);
+    }
+
+    // order groups by earliest screenshot.order (keeps your existing reorder behavior)
+    const keys = Array.from(buckets.keys()).sort((a, b) => {
+      const aMin = Math.min(...buckets.get(a)!.map(x => x.order));
+      const bMin = Math.min(...buckets.get(b)!.map(x => x.order));
+      return aMin - bMin;
+    });
+
+    return keys.map((key) => ({
+      key,
+      meta: key ? groupsByKey.get(key) : undefined,
+      items: buckets.get(key)!.sort((x,y)=>x.order-y.order),
+    }));
+  }, [plan, sorted, screenshotGroups]);
+
+  const shotsByGroup = useMemo(() => {
+    const map = new Map<string, Screenshot[]>();
+    for (const s of sorted) {
+      const k = (s.groupKey ?? "").trim();
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(s);
+    }
+    return map;
+  }, [sorted]);
+
+  const THUMB = 48; // 12 * 4px = 48px (h-12 w-12)
+  const GAP = 8;    // gap-2 = 8px
+  const VISIBLE = 6;
+
+  const stripWidth = VISIBLE * THUMB + (VISIBLE - 1) * GAP; // 6 thumbs + 5 gaps
+
   return (
     <section style={{ marginTop: 16 }}>
       <div className="w-full flex items-center gap-3 justify-start sm:justify-between">
@@ -291,6 +399,10 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
           <p className="text-sm text-slate-500 mt-1 font-serif hidden sm:block">
             {screenshotsUsed}/{screenshotLimit} used
           </p>
+
+          {/* Manage screenshots */}
+
+
 
            {plan === "FREE" ? (
               limitReached ? (
@@ -307,7 +419,8 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                       fontSize: 11,
                       padding: "2px 8px",
                       borderRadius: 999,
-                      border: "1px solid #111"
+                      border: "2px solid #6366f1",
+                      marginLeft: "12px"
                     }}
                   >
                     PRO
@@ -400,6 +513,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                       <div className="text-xl font-semibold text-primary font-serif">
                         {s.order}.
                       </div>
+                      
                       <div>
                         <button
                           title="Preview"
@@ -468,6 +582,51 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                           <Trash2 size={18} />
                         </button>
                       </div>
+                       {plan === "PRO" ? (
+                        <div className="mt-2">
+                          <label className="text-xs text-slate-500 font-serif">Group</label>
+                          <select
+                            value={s.groupKey ?? ""}
+                            onChange={async (e) => {
+                              const groupKey = e.target.value; // should now be "onboarding"
+                              console.log("Selected groupKey:", groupKey);
+                              setScreenshots(prev =>
+                                prev.map(x => (x._id === s._id ? { ...x, groupKey } : x))
+                              );
+                              try{
+                                const token = await getToken();
+                                if (!token) return;
+                                console.log("Value in select:",e.target.value);
+                                await apiFetch(`/apps/${appId}/screenshots/${s._id}`, {
+                                  method: "PATCH",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                  body: JSON.stringify({ groupKey: e.target.value }),
+                                });
+
+                                await load();
+                              }catch(e){
+                                console.error(e);
+                                // rollback if needed
+                                await load();
+                              }
+                              
+                            }}
+                            className="mt-1 w-full px-2 py-2 rounded-lg text-sm bg-primary/10 text-primary font-mono"
+                          >
+                            
+                            <option value="">Ungrouped</option>
+                            { screenshotGroups.map((g) => (
+                              <option key={(g as any).key ?? (g as any)._id ?? g.title} value={g.key}>
+                                {g.title} — key: {(g as any).key}
+                              </option>
+                            ))}
+
+                          </select>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 )}
@@ -478,22 +637,237 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
       </DndContext>
       {sorted.length > 1 ? (
         <div style={{ marginTop: 12 }}>
+          <p className="flex items-center gap-1 text-xs font-medium text-primary/80">
+            <Info size={14} />
+            <span>
+              Arrange screenshots in the exact order you want for it to appear on the public appfolio.
+            </span>
+          </p>
           <button
             onClick={saveOrder}
             disabled={savingOrder}
             className="px-4 py-2 my-5 rounded-lg text-l font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
           >
-            {savingOrder ? "Saving..." : "Save order"}
+            {savingOrder ? "Saving..." : "Save Order"}
           </button>
         </div>
       ) : null}
+      {plan === "PRO" ? (
+        <div className="border rounded-2xl p-4 bg-slate-50 mb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold text-slate-900 font-serif">Screenshot groups</div>
+              <div className="text-sm text-slate-500 font-serif">
+                Create sections like Onboarding, Home, Checkout.
+              </div>
+            </div>
 
-      <p className="flex items-center gap-1 text-xs font-medium text-primary/80">
-        <Info size={14} />
-        <span>
-          Arrange screenshots in the exact order you want for it to appear on the public appfolio.
-        </span>
-      </p>
+            <button
+              type="button"
+              onClick={async () => {
+                const title = prompt("Group title (ex: Onboarding)")?.trim();
+                if (!title) return;
+                const description = prompt("Small description (optional)")?.trim() || "";
+
+                await createGroupSafe(title, description);
+
+                await load();
+              }}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
+            >
+              + Create group
+            </button>
+          </div>
+
+          {screenshotGroups.length ? (
+            
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {screenshotGroups.map((g) => {
+                const groupShots = shotsByGroup.get(g.key) || [];
+                const ungrouped = shotsByGroup.get("") || [];
+
+                return (
+                <div key={g.key} className="rounded-xl border bg-white p-3">
+                  <div className="font-medium text-slate-900 font-serif">{g.title}</div>
+                  {g.description ? (
+                    <div className="text-sm text-slate-500 mt-1 font-serif">{g.description}</div>
+                  ) : null}
+                  <div className="mt-3 text-xs text-slate-500 font-mono">
+                    {groupShots.length} screenshot{groupShots.length === 1 ? "" : "s"}
+                  </div>
+
+                  {groupShots.length ? (
+                    // <div 
+                    //   className="thumb-scroll mt-2 flex gap-2 overflow-x-auto pb-1"
+                    //   style={{
+                    //     scrollbarWidth: "thin",
+                    //   }}
+                    // >
+                    //   {groupShots.slice(0, 6).map((shot) => {
+                    //     const idx = sorted.findIndex(x => x._id === shot._id);
+                    //     return (
+                    //       <img
+                    //         key={shot._id}
+                    //         src={shot.url}
+                    //         alt=""
+                    //         className="
+                    //         h-12 w-12 rounded-lg border object-cover cursor-pointer
+                    //         transition-transform duration-150
+                    //         hover:border-primary/60 hover:ring-2 hover:ring-primary/20
+                    //         "
+                    //         onClick={() => {
+                    //           setViewerIndex(idx);
+                    //           setViewerOpen(true);
+                    //         }}
+                    //       />
+                    //     );
+                    //   })}
+                    //   {groupShots.length > 6 ? (
+                    //     <div className="h-12 px-3 rounded-lg border flex items-center text-xs text-slate-500">
+                    //       +{groupShots.length - 6}
+                    //     </div>
+                    //   ) : null}
+                    // </div>
+
+                    // V2
+                    // <div
+                    //   className="thumb-scroll mt-2 flex gap-2 overflow-x-auto flex-nowrap pb-3 cursor-grab select-none"
+                    //   style={{ scrollbarWidth: "thin" }}
+                    // >
+                    //   {groupShots.map((shot) => {
+                    //     const idx = sorted.findIndex((x) => x._id === shot._id);
+                    //     return (
+                    //       <img
+                    //         key={shot._id}
+                    //         src={shot.url}
+                    //         alt=""
+                    //         onClick={() => {
+                    //           setViewerIndex(idx);
+                    //           setViewerOpen(true);
+                    //         }}
+                    //         className="
+                    //           h-12 w-12 rounded-lg border border-slate-200 object-cover cursor-pointer
+                    //           transition-transform duration-150
+                    //           hover:scale-[1.03]
+                    //           hover:border-primary/60 hover:ring-2 hover:ring-primary/20
+                    //         "
+                    //       />
+                    //     );
+                    //   })}
+                    // </div>
+
+                    <div
+                      className="mt-2"
+                      style={{ width: stripWidth }}
+                    >
+                      <div
+                        className="flex gap-2 overflow-x-auto pb-2"
+                        style={{
+                          scrollbarWidth: "thin",          // Firefox
+                          WebkitOverflowScrolling: "touch" // iOS smooth
+                        }}
+                      >
+                        {groupShots.map((shot) => {
+                          const idx = sorted.findIndex((x) => x._id === shot._id);
+                          return (
+                            <img
+                              key={shot._id}
+                              src={shot.url}
+                              alt=""
+                              onClick={() => {
+                                setViewerIndex(idx);
+                                setViewerOpen(true);
+                              }}
+                              className="
+                                h-12 w-12 flex-none rounded-lg
+                                border border-slate-200 object-cover cursor-pointer
+                                transition-transform duration-150
+                                hover:scale-[1.03]
+                                hover:border-primary/60 hover:ring-2 hover:ring-primary/20
+                              "
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Optional: tiny hint only when scroll exists */}
+                      {groupShots.length > 6 ? (
+                        <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                          Drag/scroll to view more →
+                        </div>
+                      ) : null}
+                    </div>
+
+                  ) : (
+                    <div className="mt-2 text-xs text-slate-400 font-mono">No screenshots assigned yet.</div>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      className="px-3 py-1.5 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 font-mono"
+                      onClick={async () => {
+                        const title = prompt("Edit title", g.title)?.trim();
+                        if (!title) return;
+                        const description = prompt("Edit description", g.description || "")?.trim() || "";
+
+                        const token = await getToken();
+                        if (!token) return;
+
+                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
+                          method: "PATCH",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ title, description }),
+                        });
+
+                        await load();
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="px-3 py-1.5 rounded-lg text-xs bg-danger/10 text-danger hover:bg-danger/20 font-mono"
+                      onClick={async () => {
+                        const ok = confirm(`Delete group "${g.title}"? Screenshots will become ungrouped.`);
+                        if (!ok) return;
+
+                        const token = await getToken();
+                        if (!token) return;
+
+                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+
+                        await load();
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )})}
+            </div>
+          ) : (
+            <div className="mt-3 text-sm text-slate-500 font-mono">No groups yet.</div>
+          )}
+        </div>
+      ) : (
+        <div className="border rounded-2xl p-4 bg-slate-50 mb-4 flex items-center justify-between">
+          <div>
+            <div className="font-semibold">Screenshot groups</div>
+            <div className="text-sm text-slate-500 font-serif">Group screenshots into sections (Pro).</div>
+          </div>
+          <button
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-primary hover:bg-slate-200 hover:cursor-pointer"
+            onClick={() => (window.location.href = "/pricing")}
+          >
+            Unlock <span className="ml-2 text-[11px] px-2 py-[2px] rounded-full border hover:cursor-pointer">PRO</span>
+          </button>
+        </div>
+      )}
     
       <ImageViewerModal
         open={viewerOpen}

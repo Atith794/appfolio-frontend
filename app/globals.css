@@ -98,3 +98,7 @@ html.exporting-diagram .react-flow__edge-path {
 .react-flow.exporting .react-flow__connection {
   display: none !important;
 }
+
+/* globals.css */
+.thumb-scroll::-webkit-scrollbar { height: 6px; }
+.thumb-scroll::-webkit-scrollbar-thumb { border-radius: 999px; }

@@ -805,79 +805,6 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
     else root.classList.remove("exporting");
   }
 
-  // async function exportPngAndUpload() {
-  //   try {
-  //     setError("");
-  //     setExporting(true);
-
-  //     const token = await getToken();
-  //     if (!token) return;
-
-  //     // Add class to hide handles/UI & enforce edge stroke in export
-  //     document.documentElement.classList.add("exporting-diagram");
-
-  //     // Capture renderer (better than root)
-  //     const renderer = document.querySelector(".react-flow__renderer") as HTMLElement | null;
-  //     if (!renderer) throw new Error("Diagram renderer not found");
-
-  //     const { toBlob } = await import("html-to-image");
-
-  //     const blob = await toBlob(renderer, {
-  //       cacheBust: true,
-  //       backgroundColor: "#ffffff",
-  //       pixelRatio: 2,
-  //       filter: (node) => {
-  //         const el = node as HTMLElement;
-  //         const cls = el.classList;
-  //         if (cls?.contains("react-flow__controls")) return false;
-  //         if (cls?.contains("react-flow__minimap")) return false;
-  //         return true;
-  //       },
-  //     });
-
-  //     if (!blob) throw new Error("Failed to render image");
-
-  //     const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
-
-  //     const sig = await apiFetch("/uploads/cloudinary-signature", {
-  //       method: "POST",
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const form = new FormData();
-  //     form.append("file", file);
-  //     form.append("api_key", (sig as any).apiKey);
-  //     form.append("timestamp", String((sig as any).timestamp));
-  //     form.append("signature", (sig as any).signature);
-  //     form.append("folder", (sig as any).folder);
-
-  //     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  //     if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
-
-  //     const uploadRes = await (await import("axios")).default.post(
-  //       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-  //       form
-  //     );
-
-  //     const imageUrl = uploadRes.data.secure_url;
-
-  //     await apiFetch(`/apps/${appId}/architecture-diagram/image`, {
-  //       method: "PATCH",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({ imageUrl }),
-  //     });
-
-  //     alert("Exported & saved PNG!");
-  //   } catch (e: any) {
-  //     setError(e.message || "Failed to export PNG");
-  //   } finally {
-  //     document.documentElement.classList.remove("exporting-diagram");
-  //     setExporting(false);
-  //   }
-  // }
   async function exportPngAndUpload() {
     try {
       setError("");
@@ -886,55 +813,32 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
       const token = await getToken();
       if (!token) return;
 
-      const root = document.querySelector(".react-flow") as HTMLElement | null;
-      if (!root) throw new Error("Diagram root not found");
+      // Add class to hide handles/UI & enforce edge stroke in export
+      document.documentElement.classList.add("exporting-diagram");
 
-      // 1️⃣ Enter export mode (hide UI)
-      setExportMode(true);
+      // Capture renderer (better than root)
+      const renderer = document.querySelector(".react-flow__renderer") as HTMLElement | null;
+      if (!renderer) throw new Error("Diagram renderer not found");
 
-      // 2️⃣ Fit all nodes nicely
-      //  = getNodesBounds(nodes);
-      // const viewport = getViewportForBounds(
-      //   bounds,
-      //   800,
-      //   600,const bounds
-      //   0.15, // padding
-      //   2     // zoom limit
-      // );
+      const { toBlob } = await import("html-to-image");
 
-      // setViewport(viewport, { duration: 300 });
-      const instance = rfInstance.current;
-      if (!instance) throw new Error("React Flow not initialized");
-
-      const bounds = getNodesBounds(nodes);
-      const viewport = getViewportForBounds(
-        bounds,
-        800,
-        600,
-        0.15,
-        2
-      );
-
-      instance.setViewport(viewport, { duration: 300 });
-
-      // Wait for layout + zoom animation
-      await new Promise((r) => setTimeout(r, 400));
-
-      // 3️⃣ Capture PNG
-      const dataUrl = await toPng(root, {
+      const blob = await toBlob(renderer, {
+        cacheBust: true,
         backgroundColor: "#ffffff",
         pixelRatio: 2,
-        cacheBust: true,
+        filter: (node) => {
+          const el = node as HTMLElement;
+          const cls = el.classList;
+          if (cls?.contains("react-flow__controls")) return false;
+          if (cls?.contains("react-flow__minimap")) return false;
+          return true;
+        },
+        skipFonts: true,
       });
 
-      // 4️⃣ Restore UI
-      setExportMode(false);
+      if (!blob) throw new Error("Failed to render image");
 
-      // 5️⃣ Upload to Cloudinary
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], `architecture-${appId}.png`, {
-        type: "image/png",
-      });
+      const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
 
       const sig = await apiFetch("/uploads/cloudinary-signature", {
         method: "POST",
@@ -949,7 +853,7 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
       form.append("folder", (sig as any).folder);
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      if (!cloudName) throw new Error("Cloudinary config missing");
+      if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
 
       const uploadRes = await (await import("axios")).default.post(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -967,14 +871,103 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
         body: JSON.stringify({ imageUrl }),
       });
 
-      alert("Architecture diagram exported successfully!");
+      alert("Exported & saved PNG!");
     } catch (e: any) {
-      setExportMode(false);
-      setError(e.message || "Export failed");
+      setError(e.message || "Failed to export PNG");
     } finally {
+      document.documentElement.classList.remove("exporting-diagram");
       setExporting(false);
     }
   }
+
+  // V2
+  // async function exportPngAndUpload() {
+  //   try {
+  //     setError("");
+  //     setExporting(true);
+
+  //     const token = await getToken();
+  //     if (!token) return;
+
+  //     const root = document.querySelector(".react-flow") as HTMLElement | null;
+  //     if (!root) throw new Error("Diagram root not found");
+
+  //     // 1️⃣ Enter export mode (hide UI)
+  //     setExportMode(true);
+
+  //     const instance = rfInstance.current;
+  //     if (!instance) throw new Error("React Flow not initialized");
+
+  //     const bounds = getNodesBounds(nodes);
+  //     const viewport = getViewportForBounds(
+  //       bounds,
+  //       800,
+  //       600,
+  //       0.15,
+  //       2
+  //     );
+
+  //     instance.setViewport(viewport, { duration: 300 });
+
+  //     // Wait for layout + zoom animation
+  //     await new Promise((r) => setTimeout(r, 400));
+
+  //     // 3️⃣ Capture PNG
+  //     const dataUrl = await toPng(root, {
+  //       backgroundColor: "#ffffff",
+  //       pixelRatio: 2,
+  //       cacheBust: true,
+  //       skipFonts: true,
+  //     });
+
+  //     // 4️⃣ Restore UI
+  //     setExportMode(false);
+
+  //     // 5️⃣ Upload to Cloudinary
+  //     const blob = await (await fetch(dataUrl)).blob();
+  //     const file = new File([blob], `architecture-${appId}.png`, {
+  //       type: "image/png",
+  //     });
+
+  //     const sig = await apiFetch("/uploads/cloudinary-signature", {
+  //       method: "POST",
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     const form = new FormData();
+  //     form.append("file", file);
+  //     form.append("api_key", (sig as any).apiKey);
+  //     form.append("timestamp", String((sig as any).timestamp));
+  //     form.append("signature", (sig as any).signature);
+  //     form.append("folder", (sig as any).folder);
+
+  //     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  //     if (!cloudName) throw new Error("Cloudinary config missing");
+
+  //     const uploadRes = await (await import("axios")).default.post(
+  //       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+  //       form
+  //     );
+
+  //     const imageUrl = uploadRes.data.secure_url;
+
+  //     await apiFetch(`/apps/${appId}/architecture-diagram/image`, {
+  //       method: "PATCH",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({ imageUrl }),
+  //     });
+
+  //     alert("Architecture diagram exported successfully!");
+  //   } catch (e: any) {
+  //     setExportMode(false);
+  //     setError(e.message || "Export failed");
+  //   } finally {
+  //     setExporting(false);
+  //   }
+  // }
 
   useEffect(() => {
     function isTypingTarget(el: EventTarget | null) {

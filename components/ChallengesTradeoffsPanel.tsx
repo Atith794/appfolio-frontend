@@ -174,13 +174,19 @@ export function ChallengesTradeoffsPanel({ appId }: { appId: string }) {
 
         {/* Intro */}
         <div className="mt-4">
-          <label className="text-sm font-semibold text-slate-700">Short intro (optional)</label>
+          <label 
+            // className="text-sm font-semibold text-slate-700"
+            className="text-sm font-semibold text-slate-800 font-serif"
+          >Short intro (optional)</label>
           <textarea
             value={intro}
             onChange={(e) => setIntro(e.target.value)}
             placeholder="Example: The biggest challenge was handling real-time updates while keeping the app fast on low-end devices..."
             rows={3}
-            className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 ${
+            // className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 ${
+            //   introTooLong ? "border-red-300 focus:ring-red-200" : "border-slate-200"
+            // }`}
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 ${
               introTooLong ? "border-red-300 focus:ring-red-200" : "border-slate-200"
             }`}
           />
@@ -233,7 +239,8 @@ export function ChallengesTradeoffsPanel({ appId }: { appId: string }) {
           <button
             onClick={save}
             disabled={saving || loading || !canSave || !isDirty}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            // className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {saving ? "Saving..." : "Save challenges"}
           </button>
@@ -241,7 +248,8 @@ export function ChallengesTradeoffsPanel({ appId }: { appId: string }) {
           <button
             onClick={() => load(true)}
             disabled={saving || loading}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-60"
+            // className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-60"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-60 cursor-pointer"
           >
             {resetting ? 'Resetting...':'Reset'}
           </button>
