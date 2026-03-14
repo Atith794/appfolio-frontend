@@ -126,87 +126,6 @@ export default function PublicUserFlowWalkthroughs({
                 const c = safeColor(step.color);
                 const cc = COLOR_CLASS[c];
 
-                // if (step.kind === "ARROW") {
-                //   return (
-                //     <div
-                //       key={stableKey("arrow", idx, step.id)}
-                //       className="flex flex-col items-center justify-center pt-2 animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
-                //       style={{ animationDelay: `${idx * 60}ms` } as any}
-                //     >
-                //       <div className={clsx("h-0.5 w-8 rounded-full relative", cc.bg)}>
-                //         <span className={clsx("absolute -right-1 -top-2.5 text-lg font-black", cc.text)}>
-                //           ›
-                //         </span>
-                //       </div>
-                //       <div className={clsx("mt-1 text-[11px] font-mono whitespace-nowrap", cc.text)}>
-                //         {step.text || "→"}
-                //       </div>
-                //     </div>
-                //   );
-                // }
-                
-                // if (step.kind === "ARROW") {
-                //   return (
-                //     <div
-                //       key={stableKey("arrow", idx, step.id)}
-                //       className="flex flex-col items-center justify-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
-                //       style={{ animationDelay: `${idx * 60}ms` } as any}
-                //     >
-                //       <div className={clsx("relative h-0.5 w-8 rounded-full", cc.bg)}>
-                //         <span
-                //           className={clsx(
-                //             "absolute -right-1 top-1/2 -translate-y-1/2 text-lg font-black leading-none",
-                //             cc.text
-                //           )}
-                //         >
-                //           ›
-                //         </span>
-                //       </div>
-
-                //       <div className={clsx("mt-1 text-[11px] font-mono whitespace-nowrap", cc.text)}>
-                //         {step.text || "→"}
-                //       </div>
-                //     </div>
-                //   );
-                // }
-
-                // if (step.kind === "ARROW") {
-                //   return (
-                //     <div
-                //       key={stableKey("arrow", idx, step.id)}
-                //       className="flex flex-col items-center justify-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
-                //       style={{ animationDelay: `${idx * 60}ms` } as any}
-                //     >
-                //       <svg
-                //         width="40"
-                //         height="16"
-                //         viewBox="0 0 40 16"
-                //         fill="none"
-                //         xmlns="http://www.w3.org/2000/svg"
-                //         className={cc.text}
-                //       >
-                //         <line
-                //           x1="0"
-                //           y1="8"
-                //           x2="34"
-                //           y2="8"
-                //           stroke="currentColor"
-                //           strokeWidth="2"
-                //           strokeLinecap="round"
-                //         />
-                //         <polygon
-                //           points="34,4 40,8 34,12"
-                //           fill="currentColor"
-                //         />
-                //       </svg>
-
-                //       <div className={clsx("mt-1 text-[11px] font-mono whitespace-nowrap", cc.text)}>
-                //         {step.text || "Next"}
-                //       </div>
-                //     </div>
-                //   );
-                // }
-
                 if (step.kind === "ARROW") {
                   return (
                     <div
@@ -281,7 +200,7 @@ export default function PublicUserFlowWalkthroughs({
                 return (
                   <div
                     key={stableKey("node", idx, step.id)}
-                    className="flex flex-col items-center gap-2 min-w-[92px] max-w-[140px] text-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
+                    className="flex flex-col items-center gap-2 min-w-23 max-w-35 text-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
                     style={{ animationDelay: `${idx * 60}ms` } as any}
                   >
                     <div

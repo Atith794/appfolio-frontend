@@ -2,7 +2,15 @@
 
 import Cropper from "react-easy-crop";
 import { useEffect, useMemo, useState } from "react";
-import { Minus, MoveLeft, MoveRight, Plus, Save } from "lucide-react";
+import {
+  Minus,
+  MoveLeft,
+  MoveRight,
+  Plus,
+  Save,
+  X,
+  RotateCcw,
+} from "lucide-react";
 
 type CropArea = { x: number; y: number; width: number; height: number };
 
@@ -23,16 +31,15 @@ export function ImageViewerModal({
   onClose: () => void;
   onSaveCrop: (index: number, cropPixels: CropArea, zoom: number) => Promise<void> | void;
   aspect?: number;
-  showSave?:boolean;
+  showSave?: boolean;
   viewerOnly?: boolean;
-  viewerFit?:"contain" | "cover";
+  viewerFit?: "contain" | "cover";
 }) {
   const [index, setIndex] = useState(startIndex);
   const [zoom, setZoom] = useState(1);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
 
-  // When modal opens or startIndex changes, sync the index
   useEffect(() => {
     if (open) setIndex(startIndex);
   }, [open, startIndex]);
@@ -42,11 +49,10 @@ export function ImageViewerModal({
   const canNext = index < images.length - 1;
 
   const canSave = useMemo(
-    () => !viewerOnly && !!croppedAreaPixels && !!imageUrl, 
+    () => !viewerOnly && !!croppedAreaPixels && !!imageUrl,
     [viewerOnly, croppedAreaPixels, imageUrl]
   );
 
-  // Keyboard navigation
   useEffect(() => {
     if (!open) return;
 
@@ -60,7 +66,6 @@ export function ImageViewerModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, canPrev, canNext, images.length, onClose]);
 
-  // Reset crop UI when changing image
   useEffect(() => {
     setZoom(1);
     if (!viewerOnly) {
@@ -71,144 +76,86 @@ export function ImageViewerModal({
 
   if (!open) return null;
 
+  const resetView = () => {
+    setZoom(1);
+    if (!viewerOnly) {
+      setCrop({ x: 0, y: 0 });
+      setCroppedAreaPixels(null);
+    }
+  };
+
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.65)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 9999,
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[9999] grid place-items-center bg-slate-950/75 p-4 backdrop-blur-md"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "min(980px, 95vw)",
-          height: "min(720px, 97vh)",
-          background: "#111",
-          borderRadius: 16,
-          border: "1px solid rgba(255,255,255,0.12)",
-          overflow: "hidden",
-          display: "grid",
-          gridTemplateRows: "1fr auto"
-        }}
+        className="flex h-[min(92vh,860px)] w-[min(1100px,96vw)] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1020] shadow-[0_30px_90px_rgba(0,0,0,0.45)]"
       >
-        {/* Viewer + cropper */}
-        <div style={{ position: "relative" }}>
-          {/* Prev/Next buttons */}
+        {/* Top bar */}
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
+          <div className="text-sm font-medium text-white/80">
+            {images.length ? `${index + 1} / ${images.length}` : ""}
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-white"
+            aria-label="Close viewer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Viewer */}
+        <div className="relative flex-1 overflow-hidden">
+          {/* Prev */}
           <button
             type="button"
             disabled={!canPrev}
             onClick={() => canPrev && setIndex((i) => i - 1)}
-            style={{
-              position: "absolute",
-              left: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              padding: "10px 12px",
-              borderRadius: 999,
-              border: "1px solid #333",
-              background: "rgba(0,0,0,0.45)",
-              color: "#fff",
-              cursor: canPrev ? "pointer" : "not-allowed",
-              opacity: canPrev ? 1 : 0.4,
-              zIndex: 10
-            }}
+            className={[
+              "absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border p-3 transition",
+              canPrev
+                ? "border-white/10 bg-white/10 text-white hover:bg-white/15"
+                : "cursor-not-allowed border-white/5 bg-white/5 text-white/30",
+            ].join(" ")}
             aria-label="Previous"
             title="Previous (←)"
           >
-            <MoveLeft />
+            <MoveLeft className="h-4 w-4" />
           </button>
 
+          {/* Next */}
           <button
             type="button"
             disabled={!canNext}
             onClick={() => canNext && setIndex((i) => i + 1)}
-            style={{
-              position: "absolute",
-              right: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              padding: "10px 12px",
-              borderRadius: 999,
-              border: "1px solid #333",
-              background: "rgba(0,0,0,0.45)",
-              color: "#fff",
-              cursor: canNext ? "pointer" : "not-allowed",
-              opacity: canNext ? 1 : 0.4,
-              zIndex: 10
-            }}
+            className={[
+              "absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border p-3 transition",
+              canNext
+                ? "border-white/10 bg-white/10 text-white hover:bg-white/15"
+                : "cursor-not-allowed border-white/5 bg-white/5 text-white/30",
+            ].join(" ")}
             aria-label="Next"
             title="Next (→)"
           >
-            <MoveRight />
+            <MoveRight className="h-4 w-4" />
           </button>
 
-          <div style={{ position: "absolute", left: 12, bottom: 12, color: "#bbb", fontSize: 12, zIndex: 10 }}>
-            {images.length ? `${index + 1} / ${images.length}` : ""}
-          </div>
-
           {viewerOnly ? (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                // overflow: "auto",
-                overflow: "hidden",
-                display: "grid",
-                placeItems: "center",
-                padding: 16
-              }}
-            >
-               <div
-                // style={{
-                //   width: "min(420px, 92vw)",    
-                //   aspectRatio: String(aspect),  
-                //   overflow: "hidden",
-                //   borderRadius: 14,
-                //   border: "1px solid rgba(255,255,255,0.12)",
-                //   background: "#000",
-                //   position: "relative",
-                //   transform: `scale(${zoom})`,
-                //   transformOrigin: "center",
-                // }}
-
-                //V2
-                // style={{
-                //   // ✅ Fit inside modal without scrolling
-                //   maxHeight: "calc(97vh - 170px)", // 97vh matches your modal height, 170px ≈ footer + padding
-                //   width: "min(70vw, 420px)",
-                //   aspectRatio: String(aspect),
-
-                //   // ✅ Key: let height constrain the box
-                //   height: "auto",
-
-                //   overflow: "hidden",
-                //   borderRadius: 14,
-                //   border: "1px solid rgba(255,255,255,0.12)",
-                //   background: "#000",
-                //   position: "relative",
-                //   transform: `scale(${zoom})`,
-                //   transformOrigin: "center",
-                // }}
-
-                //V3
+            <div className="absolute inset-0 grid place-items-center p-6 sm:p-8">
+              <div
+                className="relative overflow-hidden rounded-[24px] border border-white/10 bg-black shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
                 style={{
-                  height: "min(calc(97vh - 170px), 520px)", // ✅ always fits; tweak 520 if you want bigger
+                  height: "min(calc(92vh - 180px), 720px)",
                   aspectRatio: String(aspect),
-                  width: "auto", // width is derived from height + aspectRatio
-
-                  overflow: "hidden",
-                  borderRadius: 14,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "#000",
-                  position: "relative",
+                  width: "auto",
                   transform: `scale(${zoom})`,
                   transformOrigin: "center",
+                  transition: "transform 180ms ease",
                 }}
               >
                 <img
@@ -226,85 +173,82 @@ export function ImageViewerModal({
               </div>
             </div>
           ) : (
-            <Cropper
-              image={imageUrl}
-              crop={crop}
-              zoom={zoom}
-              aspect={aspect}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels as any)}
-            />
+            <div className="absolute inset-0">
+              <Cropper
+                image={imageUrl}
+                crop={crop}
+                zoom={zoom}
+                aspect={aspect}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels as any)}
+              />
+            </div>
           )}
         </div>
 
-        {/* Controls */}
-        <div style={{ padding: 12, background: "#0b0b0b", display: "flex", gap: 10, alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.max(1, Number((z - 0.2).toFixed(2))))}
-            style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #333", color: "#fff", background: "transparent" }}
-          >
-            <Minus />
-          </button>
+        {/* Bottom controls */}
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-black/20 px-4 py-3 sm:px-5">
+          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, Number((z - 0.2).toFixed(2))))}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
 
-          <div style={{ color: "#ddd", fontSize: 12, minWidth: 70, textAlign: "center" }}>
-            {Math.round(zoom * 100)}%
+            <div className="min-w-[64px] text-center text-sm font-medium text-white/80">
+              {Math.round(zoom * 100)}%
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(4, Number((z + 0.2).toFixed(2))))}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
 
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.min(4, Number((z + 0.2).toFixed(2))))}
-            style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #333", color: "#fff", background: "transparent" }}
+            onClick={resetView}
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
           >
-            <Plus />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setZoom(1);
-              if (!viewerOnly) {
-                setCrop({ x: 0, y: 0 });
-                setCroppedAreaPixels(null);
-              };
-            }}
-            style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #333", color: "#fff", background: "transparent" }}
-          >
+            <RotateCcw className="h-4 w-4" />
             Reset
           </button>
 
-          <div style={{ flex: 1 }} />
+          <div className="flex-1" />
 
-           <button
+          <button
             type="button"
             onClick={onClose}
-            className="bg-primary/40 font-serif hover:bg-primary/20"
-            style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #333", color: "#fff", }}
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
           >
             Close
           </button>
 
-          {showSave && !viewerOnly ? 
-          <button
-            type="button"
-            disabled={!canSave}
-            onClick={async () => {
-              if (!croppedAreaPixels) return;
-              await onSaveCrop(index, croppedAreaPixels, zoom);
-            }}
-            className=" hover:text-primary bg-white font-serif"
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #fff",
-              color: "#111",
-              opacity: canSave ? 1 : 0.5,
-              cursor: canSave ? "pointer" : "not-allowed"
-            }}
-          >
-            Save crop
-          </button>:null}
+          {showSave && !viewerOnly ? (
+            <button
+              type="button"
+              disabled={!canSave}
+              onClick={async () => {
+                if (!croppedAreaPixels) return;
+                await onSaveCrop(index, croppedAreaPixels, zoom);
+              }}
+              className={[
+                "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
+                canSave
+                  ? "bg-white text-slate-900 hover:bg-slate-100"
+                  : "cursor-not-allowed bg-white/30 text-slate-700",
+              ].join(" ")}
+            >
+              <Save className="h-4 w-4" />
+              Save crop
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

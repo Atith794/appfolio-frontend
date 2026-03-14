@@ -7,7 +7,7 @@ import { apiFetch, API_BASE } from "@/lib/api";
 import { ImageViewerModal } from "@/components/ImageViewerModal";
 import { makeCroppedCloudinaryUrl } from "@/lib/cloudinary";
 import { redirect } from "next/navigation";
-import { Info, MoveDown, MoveLeft, MoveRight, MoveUp, Trash2, GripVertical, Eye } from 'lucide-react'
+import { Info, MoveDown, MoveLeft, MoveRight, MoveUp, Trash2, GripVertical, Eye, Edit, Pencil } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -688,7 +688,34 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
                 return (
                 <div key={g.key} className="rounded-xl border bg-white p-3">
-                  <div className="font-medium text-slate-900 font-serif">{g.title}</div>
+                  <div className="font-medium text-slate-900 font-serif">
+                    {g.title}
+                    <button
+                      className="mx-3 px-3 py-1.5 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 font-mono cursor-pointer"
+                      onClick={async () => {
+                        const title = prompt("Edit title", g.title)?.trim();
+                        if (!title) return;
+                        const description = prompt("Edit description", g.description || "")?.trim() || "";
+
+                        const token = await getToken();
+                        if (!token) return;
+
+                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
+                          method: "PATCH",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ title, description }),
+                        });
+
+                        await load();
+                      }}
+                    >
+                      <Pencil  size={12}/>
+                      {/* <Edit size={8}/> */}
+                    </button>
+                  </div>
                   {g.description ? (
                     <div className="text-sm text-slate-500 mt-1 font-serif">{g.description}</div>
                   ) : null}
@@ -697,65 +724,6 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                   </div>
 
                   {groupShots.length ? (
-                    // <div 
-                    //   className="thumb-scroll mt-2 flex gap-2 overflow-x-auto pb-1"
-                    //   style={{
-                    //     scrollbarWidth: "thin",
-                    //   }}
-                    // >
-                    //   {groupShots.slice(0, 6).map((shot) => {
-                    //     const idx = sorted.findIndex(x => x._id === shot._id);
-                    //     return (
-                    //       <img
-                    //         key={shot._id}
-                    //         src={shot.url}
-                    //         alt=""
-                    //         className="
-                    //         h-12 w-12 rounded-lg border object-cover cursor-pointer
-                    //         transition-transform duration-150
-                    //         hover:border-primary/60 hover:ring-2 hover:ring-primary/20
-                    //         "
-                    //         onClick={() => {
-                    //           setViewerIndex(idx);
-                    //           setViewerOpen(true);
-                    //         }}
-                    //       />
-                    //     );
-                    //   })}
-                    //   {groupShots.length > 6 ? (
-                    //     <div className="h-12 px-3 rounded-lg border flex items-center text-xs text-slate-500">
-                    //       +{groupShots.length - 6}
-                    //     </div>
-                    //   ) : null}
-                    // </div>
-
-                    // V2
-                    // <div
-                    //   className="thumb-scroll mt-2 flex gap-2 overflow-x-auto flex-nowrap pb-3 cursor-grab select-none"
-                    //   style={{ scrollbarWidth: "thin" }}
-                    // >
-                    //   {groupShots.map((shot) => {
-                    //     const idx = sorted.findIndex((x) => x._id === shot._id);
-                    //     return (
-                    //       <img
-                    //         key={shot._id}
-                    //         src={shot.url}
-                    //         alt=""
-                    //         onClick={() => {
-                    //           setViewerIndex(idx);
-                    //           setViewerOpen(true);
-                    //         }}
-                    //         className="
-                    //           h-12 w-12 rounded-lg border border-slate-200 object-cover cursor-pointer
-                    //           transition-transform duration-150
-                    //           hover:scale-[1.03]
-                    //           hover:border-primary/60 hover:ring-2 hover:ring-primary/20
-                    //         "
-                    //       />
-                    //     );
-                    //   })}
-                    // </div>
-
                     <div
                       className="mt-2"
                       style={{ width: stripWidth }}
@@ -802,30 +770,6 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                     <div className="mt-2 text-xs text-slate-400 font-mono">No screenshots assigned yet.</div>
                   )}
                   <div className="mt-3 flex gap-2">
-                    <button
-                      className="px-3 py-1.5 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 font-mono"
-                      onClick={async () => {
-                        const title = prompt("Edit title", g.title)?.trim();
-                        if (!title) return;
-                        const description = prompt("Edit description", g.description || "")?.trim() || "";
-
-                        const token = await getToken();
-                        if (!token) return;
-
-                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
-                          method: "PATCH",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ title, description }),
-                        });
-
-                        await load();
-                      }}
-                    >
-                      Edit
-                    </button>
 
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs bg-danger/10 text-danger hover:bg-danger/20 font-mono"
@@ -912,8 +856,6 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
           const target = sorted[index];
           if (!target) return;
 
-          // IMPORTANT: your makeCroppedCloudinaryUrl currently only takes cropPixels.
-          // zoom doesn't matter for the final pixels, so we can ignore zoom here.
           const newUrl = makeCroppedCloudinaryUrl(target.url, cropPixels);
 
           const data = await apiFetch(`/apps/${appId}/screenshots/${target._id}`, {
@@ -931,8 +873,11 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
           setScreenshots((data as any).screenshots || []);
         }}
+        allowCrop={true}
+        allowNotchChange={true}
+        initialNotch="iphone-pill"
+        title="Preview"
       />
-
     </section>
   );
 }

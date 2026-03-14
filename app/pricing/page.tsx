@@ -1,375 +1,3 @@
-// "use client";
-
-// import { useAuth } from "@clerk/nextjs";
-// import { apiFetch } from "@/lib/api";
-// import { loadRazorpay } from "@/lib/loadRazorpay";
-// import { useRouter } from "next/navigation";
-// import { useState } from "react";
-
-// export default function PricingPage() {
-//   const { getToken } = useAuth();
-//   const router = useRouter();
-//   const [loading, setLoading] = useState(false);
-
-//   async function upgrade() {
-//     setLoading(true);
-//     try {
-//       const ok = await loadRazorpay();
-//       if (!ok) {
-//         alert("Razorpay SDK failed to load");
-//         return;
-//       }
-
-//       const token = await getToken();
-//       if (!token) {
-//         alert("Please login to upgrade.");
-//         return;
-//       }
-
-//       // 1) Create order
-//       const orderData: any = await apiFetch("/billing/create-order", {
-//         method: "POST",
-//         headers: { Authorization: `Bearer ${token}` }
-//       });
-
-//       if (orderData?.alreadyPro) {
-//         alert("You are already Pro ✅");
-//         router.push("/dashboard");
-//         return;
-//       }
-
-//       const options = {
-//         key: orderData.keyId,
-//         amount: orderData.amount,
-//         currency: orderData.currency,
-//         name: "Appfolio Pro",
-//         description: "Lifetime Pro access",
-//         order_id: orderData.orderId,
-//         handler: async function (response: any) {
-//           // 2) Verify payment
-//           await apiFetch("/billing/verify-payment", {
-//             method: "POST",
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`
-//             },
-//             body: JSON.stringify(response)
-//           });
-
-//           // 3) Redirect to dashboard
-//           router.push("/dashboard");
-//           router.refresh();
-//         },
-//         theme: { color: "#111111" }
-//       };
-
-//       const rzp = new (window as any).Razorpay(options);
-//       rzp.on("payment.failed", function (resp: any) {
-//         alert(resp?.error?.description || "Payment failed");
-//       });
-//       rzp.open();
-//     } catch (e: any) {
-//       alert(e.message || "Upgrade failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   return (
-//     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-//       <h1 style={{ fontSize: 28, fontWeight: 900 }}>Pricing</h1>
-
-//       <div style={{ marginTop: 16, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-//         <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 16 }}>
-//           <div style={{ fontWeight: 800, fontSize: 18 }}>Free</div>
-//           <div style={{ marginTop: 6, color: "#666" }}>₹0</div>
-//           <ul style={{ marginTop: 12, color: "#444", paddingLeft: 18 }}>
-//             <li>Unlimited apps</li>
-//             <li>Up to 6 screenshots/app</li>
-//             <li>Walkthrough builder</li>
-//             <li>Public share links</li>
-//           </ul>
-//         </div>
-
-//         <div style={{ border: "1px solid #111", borderRadius: 16, padding: 16 }}>
-//           <div style={{ fontWeight: 900, fontSize: 18 }}>Pro</div>
-//           <div style={{ marginTop: 6, fontSize: 22, fontWeight: 900 }}>₹399 <span style={{ fontSize: 12, fontWeight: 600, color: "#666" }}>(one-time)</span></div>
-//           <ul style={{ marginTop: 12, color: "#444", paddingLeft: 18 }}>
-//             <li>Up to 12 screenshots/app</li>
-//             <li>Remove branding</li>
-//             <li>Cover themes + choose cover screenshot</li>
-//             <li>Pro badge on profile</li>
-//           </ul>
-
-//           <button
-//             onClick={upgrade}
-//             disabled={loading}
-//             style={{
-//               marginTop: 14,
-//               padding: "10px 14px",
-//               borderRadius: 12,
-//               border: "1px solid #111",
-//               background: "#111",
-//               color: "#fff",
-//               cursor: loading ? "not-allowed" : "pointer",
-//               opacity: loading ? 0.7 : 1
-//             }}
-//           >
-//             {loading ? "Opening payment..." : "Upgrade to Pro"}
-//           </button>
-//         </div>
-//       </div>
-//     </main>
-//   );
-// }
-
-// V2
-// "use client";
-
-// import { useAuth } from "@clerk/nextjs";
-// import { apiFetch } from "@/lib/api";
-// import { loadRazorpay } from "@/lib/loadRazorpay";
-// import { useRouter } from "next/navigation";
-// import { useMemo, useState } from "react";
-// import { Check, Sparkles, ArrowLeft } from "lucide-react";
-
-// export default function PricingPage() {
-//   const { getToken } = useAuth();
-//   const router = useRouter();
-//   const [loading, setLoading] = useState(false);
-
-//   async function upgrade() {
-//     setLoading(true);
-//     try {
-//       const ok = await loadRazorpay();
-//       if (!ok) {
-//         alert("Razorpay SDK failed to load");
-//         return;
-//       }
-
-//       const token = await getToken();
-//       if (!token) {
-//         alert("Please login to upgrade.");
-//         return;
-//       }
-
-//       const orderData: any = await apiFetch("/billing/create-order", {
-//         method: "POST",
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       if (orderData?.alreadyPro) {
-//         alert("You are already Pro ✅");
-//         router.push("/dashboard");
-//         return;
-//       }
-
-//       const options = {
-//         key: orderData.keyId,
-//         amount: orderData.amount,
-//         currency: orderData.currency,
-//         name: "Appfolio Pro",
-//         description: "Lifetime Pro access",
-//         order_id: orderData.orderId,
-//         handler: async function (response: any) {
-//           await apiFetch("/billing/verify-payment", {
-//             method: "POST",
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`,
-//             },
-//             body: JSON.stringify(response),
-//           });
-
-//           router.push("/dashboard");
-//           router.refresh();
-//         },
-//         theme: { color: "#111111" },
-//       };
-
-//       const rzp = new (window as any).Razorpay(options);
-//       rzp.on("payment.failed", function (resp: any) {
-//         alert(resp?.error?.description || "Payment failed");
-//       });
-//       rzp.open();
-//     } catch (e: any) {
-//       alert(e.message || "Upgrade failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   const freeFeatures = useMemo(
-//     () => [
-//       "Unlimited apps",
-//       "Up to 6 screenshots/app",
-//       "Walkthrough builder",
-//       "Public share links",
-//     ],
-//     []
-//   );
-
-//   const proFeatures = useMemo(
-//     () => [
-//       "Up to 12 screenshots/app",
-//       "Screenshot groups (Onboarding, Home, Checkout)",
-//       "Remove branding",
-//       "Cover themes + choose cover screenshot",
-//       "Pro badge on profile",
-//     ],
-//     []
-//   );
-
-//   return (
-//     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-//       {/* Top bar (like panels) */}
-//       <div className="flex items-center justify-between gap-3">
-//         <button
-//           onClick={() => router.back()}
-//           className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer inline-flex items-center gap-2"
-//         >
-//           <ArrowLeft size={16} />
-//           Back
-//         </button>
-
-//         <button
-//           onClick={() => router.push("/dashboard")}
-//           className="px-4 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
-//         >
-//           Dashboard
-//         </button>
-//       </div>
-
-//       {/* Header */}
-//       <div className="mt-8">
-//         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-mono">
-//           <Sparkles size={14} />
-//           Unlock professional credibility
-//         </div>
-
-//         <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900 font-serif">
-//           Pricing
-//         </h1>
-//         <p className="mt-2 text-slate-500 font-serif max-w-2xl">
-//           Free gets you started. Pro unlocks the premium sections + extra polish for recruiters.
-//         </p>
-//       </div>
-
-//       {/* Cards */}
-//       <div className="mt-8 grid gap-4 lg:grid-cols-2">
-//         {/* FREE */}
-//         <div className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 hover:border-primary/50 hover:bg-primary/5 transition-all">
-//           <div className="flex items-start justify-between gap-3">
-//             <div>
-//               <div className="text-lg font-bold text-slate-900 font-serif">Free</div>
-//               <div className="mt-1 text-slate-500 font-mono text-sm">For getting started</div>
-//             </div>
-
-//             <div className="text-right">
-//               <div className="text-2xl font-black text-slate-900 font-serif">₹0</div>
-//               <div className="text-xs text-slate-500 font-mono">forever</div>
-//             </div>
-//           </div>
-
-//           <div className="mt-5 space-y-2">
-//             {freeFeatures.map((f) => (
-//               <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
-//                 <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
-//                   <Check size={14} />
-//                 </span>
-//                 <span className="font-serif">{f}</span>
-//               </div>
-//             ))}
-//           </div>
-
-//           <div className="mt-6 flex flex-wrap gap-2">
-//             <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono">
-//               Public share
-//             </span>
-//             <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono">
-//               Core builder
-//             </span>
-//             <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono">
-//               Basic credibility
-//             </span>
-//           </div>
-//         </div>
-
-//         {/* PRO */}
-//         <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7 relative overflow-hidden">
-//           {/* subtle accent */}
-//           <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-2xl" />
-
-//           <div className="relative">
-//             <div className="flex items-start justify-between gap-3">
-//               <div>
-//                 <div className="flex items-center gap-2">
-//                   <div className="text-lg font-black text-slate-900 font-serif">
-//                     Pro
-//                   </div>
-//                   <span className="text-[11px] px-2 py-[2px] rounded-full border-2 border-primary text-primary font-mono">
-//                     RECOMMENDED
-//                   </span>
-//                 </div>
-//                 <div className="mt-1 text-slate-500 font-mono text-sm">
-//                   Lifetime access (one-time)
-//                 </div>
-//               </div>
-
-//               <div className="text-right">
-//                 <div className="text-3xl font-black text-slate-900 font-serif">
-//                   ₹399
-//                 </div>
-//                 <div className="text-xs text-slate-500 font-mono">(one-time)</div>
-//               </div>
-//             </div>
-
-//             <div className="mt-5 space-y-2">
-//               {proFeatures.map((f) => (
-//                 <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
-//                   <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
-//                     <Check size={14} />
-//                   </span>
-//                   <span className="font-serif">{f}</span>
-//                 </div>
-//               ))}
-//             </div>
-
-//             <button
-//               onClick={upgrade}
-//               disabled={loading}
-//               className={`mt-6 w-full px-4 py-3 rounded-xl text-sm font-semibold font-serif
-//                 bg-primary/10 text-primary hover:bg-primary/20 transition-all
-//                 ${loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}
-//               `}
-//             >
-//               {loading ? "Opening payment..." : "Upgrade to Pro"}
-//               <span className="ml-2 text-[11px] px-2 py-[2px] rounded-full border-2 border-primary font-mono">
-//                 PRO
-//               </span>
-//             </button>
-
-//             <p className="mt-3 text-xs text-slate-500 font-mono">
-//               Secure checkout via Razorpay. If you already have Pro, you’ll be redirected.
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Bottom hint (same style as your Info strip) */}
-//       <div className="mt-6">
-//         <p className="flex items-center gap-2 text-xs font-medium text-primary/80">
-//           <Sparkles size={14} />
-//           <span>
-//             Pro is designed to make your Appfolio feel “recruiter-ready” with premium sections and polish.
-//           </span>
-//         </p>
-//       </div>
-//     </main>
-//   );
-// }
-
-
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
@@ -386,25 +14,11 @@ import {
   HelpCircle,
 } from "lucide-react";
 
-/**
- * $10M-startup pricing page structure:
- * - Hero + trust
- * - Billing toggle
- * - Currency selector
- * - 3 cards (Free, Pro Monthly, Pro Yearly)
- * - Feature comparison table
- * - FAQ
- * - Bottom CTA
- *
- * You can keep Razorpay for India and use Stripe for US/UK later.
- */
-
 type Currency = "USD" | "GBP" | "INR";
 type Billing = "MONTHLY" | "YEARLY";
 
 function detectCurrency(): Currency {
-  // Best-effort locale-based detection (fast, no IP lookup).
-  // Fallback USD.
+  
   const locale =
     (typeof navigator !== "undefined" && navigator.language) || "en-US";
 
@@ -428,7 +42,6 @@ const PRICES: Record<
   {
     monthly: number;
     yearly: number;
-    // optional “anchor” for discount messaging (what yearly would cost if paid monthly)
     yearlyAnchor?: number;
   }
 > = {
@@ -437,7 +50,6 @@ const PRICES: Record<
   INR: { monthly: 499, yearly: 1999, yearlyAnchor: 499 * 12 },
 };
 
-// Feature set (keep aligned with your product decisions)
 const FEATURE_ROWS = [
   { key: "apps", label: "Unlimited apps", free: true, pro: true },
   { key: "share", label: "Public share links", free: true, pro: true },
@@ -519,6 +131,20 @@ export default function PricingPage() {
   const price = PRICES[currency];
   const proPrice = billing === "MONTHLY" ? price.monthly : price.yearly;
 
+  async function startStripeCheckout(token: string, billing: Billing, currency: Currency) {
+    const data = await apiFetch("/billing/stripe/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ billing, currency }),
+    });
+
+    if (!data?.url) throw new Error("Stripe checkout session URL missing");
+    window.location.href = data.url; // redirect to Stripe
+  }
+
   const savePct = useMemo(() => {
     if (!price.yearlyAnchor) return null;
     const yearly = price.yearly;
@@ -534,9 +160,10 @@ export default function PricingPage() {
     return currency === "INR" ? "RAZORPAY" : "STRIPE";
   }, [currency]);
 
-  async function handleUpgrade() {
-    // For now: keep your Razorpay flow for INR.
-    // For USD/GBP: show a “Stripe coming soon” message OR route to your Stripe checkout when implemented.
+  async function handleUpgrade(nextBilling?: Billing) {
+
+    const chosenBilling = nextBilling ?? billing;
+
     setLoading(true);
     try {
       const token = await getToken();
@@ -545,60 +172,46 @@ export default function PricingPage() {
         return;
       }
 
-      if (provider === "RAZORPAY") {
+      if (currency === "INR") {
         const ok = await loadRazorpay();
         if (!ok) {
           alert("Razorpay SDK failed to load");
           return;
         }
 
-        // You should pass billing + currency to backend so it creates correct order amount.
-        // Example: POST /billing/create-order { plan: 'PRO', billing: 'MONTHLY'|'YEARLY', currency: 'INR' }
-        const orderData: any = await apiFetch("/billing/create-order", {
+        const subData = await apiFetch("/billing/razorpay/create-subscription", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            plan: "PRO",
-            billing,
-            currency,
-          }),
+          body: JSON.stringify({ billing: chosenBilling, currency: "INR" }),
         });
 
-        if (orderData?.alreadyPro) {
+        if (subData?.alreadyPro) {
           alert("You are already Pro ✅");
           router.push("/dashboard");
           return;
         }
 
         const options = {
-          key: orderData.keyId,
-          amount: orderData.amount,
-          currency: orderData.currency,
+          key: subData.keyId,
+          subscription_id: subData.subscriptionId,
           name: "Appfolio Pro",
-          description:
-            billing === "MONTHLY" ? "Pro Monthly subscription" : "Pro Yearly subscription",
-          order_id: orderData.orderId,
-          handler: async function (response: any) {
-            await apiFetch("/billing/verify-payment", {
+          description: chosenBilling === "MONTHLY" ? "Pro Monthly" : "Pro Yearly",
+          handler: async (resp: any) => {
+            await apiFetch("/billing/razorpay/verify-subscription", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({
-                ...response,
-                billing,
-                currency,
-              }),
+              body: JSON.stringify(resp),
             });
 
             router.push("/dashboard");
             router.refresh();
           },
-          theme: { color: "#111111" },
         };
 
         const rzp = new (window as any).Razorpay(options);
@@ -609,12 +222,7 @@ export default function PricingPage() {
         return;
       }
 
-      // Stripe path (implement when ready):
-      // 1) call backend to create stripe checkout session
-      // 2) redirect to session url
-      alert(
-        "For US/UK payments, Stripe checkout is recommended. Wire Stripe next and this button will redirect to Stripe."
-      );
+      await startStripeCheckout(token, chosenBilling, currency);
     } catch (e: any) {
       alert(e?.message || "Upgrade failed");
     } finally {
@@ -763,79 +371,6 @@ export default function PricingPage() {
             Continue with Free <ArrowRight className="inline ml-2" size={16} />
           </button>
         </div>
-
-        {/* Pro */}
-        {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 relative overflow-hidden">
-          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-2xl" />
-          <div className="relative">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="text-lg font-black text-slate-900 font-serif">Pro</div>
-                  <span className="text-[11px] px-2 py-[2px] rounded-full border-2 border-primary text-primary font-mono">
-                    POPULAR
-                  </span>
-                </div>
-                <div className="mt-1 text-sm text-slate-500 font-mono">
-                  {billing === "MONTHLY" ? "Billed monthly" : "Billed yearly (best value)"}
-                </div>
-              </div>
-
-              <div className="text-right">
-                <div className="text-3xl font-black text-slate-900 font-serif">
-                  {formatPrice(proPrice, currency)}
-                </div>
-                <div className="text-xs text-slate-500 font-mono">
-                  {billing === "MONTHLY" ? "/ month" : "/ year"}
-                </div>
-              </div>
-            </div>
-
-            {billing === "YEARLY" && savePct?.saved ? (
-              <div className="mt-3 text-xs text-primary/90 font-mono">
-                Save {formatPrice(savePct.saved, currency)} vs monthly
-              </div>
-            ) : null}
-
-            <div className="mt-4 space-y-2">
-              {[
-                "Up to 20 screenshots/app",
-                "Screenshot groups",
-                "Choose cover screenshot + themes",
-                "Remove branding + Pro badge",
-                "Architecture + Integrations & Key Decisions unlocked",
-              ].map((f) => (
-                <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Check size={14} />
-                  </span>
-                  <span className="font-serif">{f}</span>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={handleUpgrade}
-              disabled={loading}
-              className={`mt-6 w-full px-4 py-3 rounded-xl text-sm font-semibold font-serif
-                bg-primary/10 text-primary hover:bg-primary/20 transition-all
-                ${loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}
-              `}
-            >
-              {loading ? "Opening checkout..." : "Upgrade to Pro"}
-              <span className="ml-2 text-[11px] px-2 py-[2px] rounded-full border-2 border-primary font-mono">
-                PRO
-              </span>
-            </button>
-
-            <p className="mt-3 text-xs text-slate-500 font-mono">
-              Payment provider:{" "}
-              <span className="text-slate-900">{provider}</span> (auto by currency)
-            </p>
-          </div>
-        </div> */}
-
-        {/* Yearly highlight card (always shown) */}
         <div className="group border-2 border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-primary/5 hover:border-primary/40 transition-all">
           <div className="flex items-start justify-between">
             <div>
@@ -877,10 +412,7 @@ export default function PricingPage() {
           </div>
 
           <button
-            onClick={() => {
-              setBilling("YEARLY");
-              handleUpgrade();
-            }}
+            onClick={() => handleUpgrade("YEARLY")}
             disabled={loading}
             className={`mt-6 w-full px-4 py-3 rounded-xl text-sm font-semibold font-serif
               bg-slate-900 text-white hover:bg-slate-800 transition-all
@@ -952,10 +484,7 @@ export default function PricingPage() {
           </div>
 
           <button
-            onClick={() => {
-              setBilling("YEARLY");
-              handleUpgrade();
-            }}
+            onClick={() => handleUpgrade("YEARLY")}
             disabled={loading}
             className={`px-5 py-3 rounded-xl text-sm font-semibold font-serif
               bg-primary/10 text-primary hover:bg-primary/20 transition-all
