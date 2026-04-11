@@ -1,5 +1,5 @@
 {
-  "name": "appfolio",
+  "name": "@appfolio/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {

@@ -1,5 +1,4 @@
 import React from "react";
-import { TECH_CATALOG } from "@/lib/techCatalog";
 import {
   AppWindow,
   ArrowLeft,
@@ -19,8 +18,9 @@ import ClickToViewImage from "@/components/ClickToViewImage";
 import PublicUserFlowWalkthroughs from "@/components/PublicUserFlowWalkthroughs";
 import PublicTechStack from "@/components/PublicTechStack";
 import { PremiumLock } from "@/components/PremiumLock";
+import ArchitectureDiagramCanvas from "@/components/ArchitectureDiagramCanvas";
 import type { Plan } from "@/lib/planConfig";
-import Reveal from "@/components/Reveal";
+
 function platformLabel(p: string) {
   const v = String(p || "").toUpperCase();
   if (v === "ANDROID") return "Android";
@@ -49,58 +49,6 @@ function SectionTitle({
   );
 }
 
-function Section({
-  title,
-  subtitle,
-  icon,
-  children,
-  variant = "default",
-  divider = true,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-  variant?: "default" | "showcase";
-  divider?: boolean;
-}) {
-  const wrapClass = variant === "showcase" ? "mt-8 md:mt-10" : "mt-10 md:mt-12";
-
-  const bodyClass =
-    variant === "showcase"
-      ? "mt-4 rounded-3xl border border-slate-900/10 bg-white/75 p-3 sm:p-4 md:p-5"
-      : "mt-4 rounded-3xl border border-slate-900/10 bg-white/70 p-5 md:p-6";
-
-  return (
-    <section className={wrapClass}>
-      <div className="px-1">
-        <div className="flex items-start gap-3">
-          {icon ? (
-            <span className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 text-primary shadow-sm">
-              {icon}
-            </span>
-          ) : null}
-
-          <div>
-            <h2 className="text-[22px] md:text-[26px] font-extrabold tracking-[-0.02em] text-slate-900 font-serif">
-              {title}
-            </h2>
-            {subtitle ? (
-              <p className="mt-1 max-w-3xl text-sm text-slate-600 font-serif">{subtitle}</p>
-            ) : null}
-          </div>
-        </div>
-
-        {divider ? <div className="mt-4 h-px w-full bg-slate-900/10" /> : null}
-      </div>
-
-      <div className={bodyClass}>
-        <Reveal>{children}</Reveal>
-      </div>
-    </section>
-  );
-}
-
 function SoftPill({
   children,
   active = false,
@@ -119,21 +67,6 @@ function SoftPill({
     >
       {children}
     </span>
-  );
-}
-
-function MiniStat({
-  icon,
-  children,
-}: {
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-2xl border border-white/60 bg-white/80 px-3 py-2 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
-      <span className="text-slate-500">{icon}</span>
-      <span className="text-sm font-medium text-slate-700">{children}</span>
-    </div>
   );
 }
 
@@ -156,15 +89,6 @@ function InfoCard({
   );
 }
 
-function FloatingStat({ icon, text }) {
-  return (
-    <div className="absolute flex items-center gap-2 px-3 py-2 bg-white/80 border border-slate-200 rounded-xl shadow-sm backdrop-blur">
-      {icon}
-      <span className="text-sm font-medium text-slate-700">{text}</span>
-    </div>
-  );
-}
-
 export function PublicAppView({
   data,
   effectivePlan,
@@ -176,7 +100,7 @@ export function PublicAppView({
 }) {
   const { user, app } = data;
   const isPro = effectivePlan === "PRO";
-
+  const architectureDiagram = app?.architectureDiagram || null;
   const screenshots = (app?.screenshots || [])
     .slice()
     .sort((a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0));
@@ -246,7 +170,7 @@ export function PublicAppView({
             ) : null}
 
             {/* HERO */}
-            <section className="grid gap-10 border-b border-slate-200/70 pb-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <section className="grid gap-10 border-b border-slate-200/70 pb-10 mb-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div className="min-w-0">
                 <div className="flex items-start gap-5">
                   {iconUrl ? (
@@ -322,158 +246,187 @@ export function PublicAppView({
                 </div>
               </div>
 
-              <div className="relative flex min-h-[360px] items-center justify-center">
-                <div className="relative z-10 w-65 sm:w-75 lg:grid-cols-[1fr_480px] mr-10">
+              <div className="relative group flex min-h-[360px] items-center justify-center">
+                <div className="absolute h-[520px] w-[520px] rounded-full bg-blue-400/20 blur-3xl transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute h-[420px] w-[420px] rounded-full bg-violet-400/20 blur-3xl transition-transform duration-500 group-hover:scale-105" />
+
+                <div className="relative z-10 w-65 sm:w-75 transition duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02]">
                   {heroPreview ? (
-                    <div className="relative flex min-h-90 items-center justify-center">
-                      <div className="absolute w-[800px] h-[800px] bg-blue-400/20 rounded-full blur-3xl" />
-                      <div className="absolute w-[600px] h-[600px] bg-indigo-400/20 rounded-full blur-3xl translate-x-6 translate-y-6" />
-                      <div className="relative z-10 w-65 sm:w-75">
-                        <PhoneFrame
-                          src={heroPreview}
-                          alt={`${app?.name || "App"} hero preview`}
-                          fit="cover"
-                          notch={notch}
-                          aspect="9/19.5"
-                          variant="hero"
-                        />
-                      </div>
-                    </div>
+                    <PhoneFrame
+                      src={heroPreview}
+                      alt={`${app?.name || "App"} hero preview`}
+                      fit="cover"
+                      notch={notch}
+                      aspect="9/19.5"
+                      variant="hero"
+                    />
                   ) : (
                     <div className="aspect-[9/19.5] w-full rounded-[38px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.10)]" />
                   )}
                 </div>
               </div>
             </section>
-
             {/* SCREENSHOTS */}
+            <div className="max-w-3xl">
+              <h2 className="text-4xl font-bold tracking-tight text-slate-950 mt-1">
+                App Screenshots
+              </h2>
+            </div>
             {visibleImages.length ? (
-              <section className="pt-10">
-                <SectionTitle title="App Screenshots" />
+              <section id="screenshots" className="pt-10">
+                <SectionTitle title="" />
                 <div className="relative">
                   <PublicScreenshots
-                    appName={app?.name}
-                    imageUrls={visibleImages.map((s: any) => s.url)}
+                    appName={app.name}
+                    screenshots={app.screenshots || []}
+                    screenshotGroups={app.screenshotGroups || []}
                     isPremium={isPro}
-                    platforms={platforms}
+                    platforms={app.platforms || []}
                   />
                 </div>
               </section>
             ) : null}
 
             {/* TECH + FLOW */}
-            <section className="grid gap-6 pt-10 lg:grid-cols-2">
-              {techGroups.some((g) => (g.items?.length ?? 0) > 0) ? (
-                <InfoCard title="Tech Stack">
-                  <PublicTechStack groups={techGroups as any} />
-                </InfoCard>
-              ) : null}
+            <div className="space-y-20">
+              <section id="flow" className="space-y-10">
+                <div className="max-w-3xl">
+                  <h2 className="text-4xl font-bold tracking-tight text-slate-950">
+                    User Flow
+                  </h2>
+                  <p className="mt-4 text-xl leading-9 text-slate-500">
+                    A walkthrough of the key screens and transitions across the app.
+                  </p>
+                </div>
 
-              {userFlowWalkthroughs?.flows?.length ? (
-                <InfoCard title="User Flow">
-                  <PremiumLock
-                    effectivePlan={effectivePlan}
-                    title="User Flow is visible on Pro"
-                    subtitle="Upgrade to show user journeys publicly."
-                    upgradeHref={isPro ? undefined : "/pricing"}
-                    compact
-                  >
-                    <PublicUserFlowWalkthroughs data={userFlowWalkthroughs} />
-                  </PremiumLock>
-                </InfoCard>
-              ) : null}
-            </section>
+                <PublicUserFlowWalkthroughs data={userFlowWalkthroughs} />
+              </section>
 
+              <section id="stack" className="space-y-10">
+                <div className="max-w-3xl">
+                  <h2 className="text-4xl font-bold tracking-tight text-slate-950">
+                    Tech Stack
+                  </h2>
+                  <p className="mt-4 text-xl leading-9 text-slate-500">
+                    A detailed overview of the technologies powering the platform.
+                  </p>
+                </div>
+                <PublicTechStack 
+                  groups={techGroups as any} 
+                  integrations={isPro ? integrationsItems : []}
+                />
+              </section>
+            </div>
             {/* ARCHITECTURE + DECISIONS */}
-            <section className="grid gap-6 pt-6 lg:grid-cols-[1.05fr_0.95fr]">
-              <InfoCard title="System Architecture">
+            <section id="architecture" className="pt-6">
+              <h2 className="text-4xl font-bold tracking-tight text-slate-950 my-3">
+                System Architecture
+              </h2>
+              <InfoCard title="">
                 <PremiumLock
                   effectivePlan={effectivePlan}
-                  title="Architecture is visible on Pro"
+                  title="Architecture is available on Pro"
                   subtitle="Upgrade to show architecture publicly."
                   upgradeHref={isPro ? undefined : "/pricing"}
                 >
-                  {architectureImageUrl ? (
-                    <ClickToViewImage
-                      src={architectureImageUrl}
-                      alt="Architecture diagram"
-                      viewerAspect={16 / 9}
-                      className="w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white"
-                    />
-                  ) : (
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Architecture diagram not added yet.
+                  <div className="space-y-8">
+                    {/* Architecture diagram */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-base font-semibold text-slate-900">
+                            Architecture Overview
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-500">
+                            A high-level view of the system, major components, and how data
+                            flows through the product.
+                          </p>
+                        </div>
+                      </div>
+
+                      {architectureDiagram?.nodes?.length ? (
+                        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_rgba(15,23,42,0.06)]">
+                          <ArchitectureDiagramCanvas
+                            nodes={architectureDiagram.nodes || []}
+                            edges={architectureDiagram.edges || []}
+                            viewport={architectureDiagram.viewport}
+                            height={520}
+                            editable={false}
+                            showControls={true}
+                            showMiniMap={true}
+                            showBackground={true}
+                          />
+                        </div>
+                      ) : architectureImageUrl ? (
+                        <ClickToViewImage
+                          src={architectureImageUrl}
+                          alt="Architecture diagram"
+                          viewerAspect={16 / 9}
+                          className="w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_rgba(15,23,42,0.06)]"
+                        />
+                      ) : (
+                        <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-sm text-slate-500">
+                          Architecture diagram not added yet.
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Decisions subsection */}
+                    {challengesBullets.length ? (
+                      <div className="border-t border-slate-200 pt-8">
+                        <div className="max-w-2xl">
+                          <h3 className="mt-3 text-base font-semibold text-slate-900">
+                            Key Design Decisions
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-500">
+                            Important tradeoffs, technical choices, and implementation
+                            decisions that shaped the architecture.
+                          </p>
+                        </div>
+
+                        <PremiumLock
+                          effectivePlan={effectivePlan}
+                          title="Engineering decisions are visible on Pro"
+                          subtitle="Upgrade to show tradeoffs publicly."
+                          upgradeHref={isPro ? undefined : "/pricing"}
+                          compact
+                        >
+                          <div className="mt-6 divide-y divide-slate-200 rounded-[24px] border border-slate-200 bg-white">
+                            {challengesBullets.slice(0, 4).map((b, idx) => (
+                              <div
+                                key={idx}
+                                className="group flex gap-4 px-5 py-5 transition duration-300 hover:bg-slate-50"
+                              >
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition duration-300 group-hover:scale-105 group-hover:bg-blue-600">
+                                  {idx + 1}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-semibold text-slate-900">
+                                    Decision {idx + 1}
+                                  </div>
+                                  <div className="mt-1 text-sm leading-7 text-slate-600">
+                                    {String(b || "")}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </PremiumLock>
+                      </div>
+                    ) : null}
+                  </div>
                 </PremiumLock>
               </InfoCard>
-
-              <div className="grid gap-6">
-                {integrationsItems.length ? (
-                  <InfoCard title="Integrations">
-                    <PremiumLock
-                      effectivePlan={effectivePlan}
-                      title="Integrations are visible on Pro"
-                      subtitle="Upgrade to show integrations publicly."
-                      upgradeHref={isPro ? undefined : "/pricing"}
-                      compact
-                    >
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {integrationsItems.slice(0, 4).map((it, idx) => (
-                          <div
-                            key={idx}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-                          >
-                            <div className="text-sm font-semibold text-slate-900">
-                              {String(it.key || "")}
-                            </div>
-                            <div className="mt-1 text-sm leading-6 text-slate-500">
-                              {String(it.value || "")}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </PremiumLock>
-                  </InfoCard>
-                ) : null}
-
-                {challengesBullets.length ? (
-                  <InfoCard title="Key Engineering Decisions / Tradeoffs">
-                    <PremiumLock
-                      effectivePlan={effectivePlan}
-                      title="Engineering decisions are visible on Pro"
-                      subtitle="Upgrade to show tradeoffs publicly."
-                      upgradeHref={isPro ? undefined : "/pricing"}
-                      compact
-                    >
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {challengesBullets.slice(0, 4).map((b, idx) => (
-                          <div
-                            key={idx}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-                          >
-                            <div className="text-sm font-semibold text-slate-900">
-                              Decision {idx + 1}
-                            </div>
-                            <div className="mt-2 text-sm leading-6 text-slate-500">
-                              {String(b || "")}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </PremiumLock>
-                  </InfoCard>
-                ) : null}
-              </div>
             </section>
 
             {/* FOOTER */}
-            <footer className="mt-10 flex flex-col gap-4 border-t border-slate-200/70 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+           {!isPro && <footer className="flex flex-col gap-4 border-t border-slate-200/70 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 Built with <span className="font-semibold text-slate-800">Appfolio</span>
               </div>
-              <div>{user?.name || user?.username || "Developer Name"}</div>
-            </footer>
+              <div>{user?.name || user?.username || "Passionate Developer"}</div>
+            </footer>}
           </div>
         </div>
       </div>

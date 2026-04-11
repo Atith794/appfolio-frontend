@@ -5,6 +5,8 @@ import { useAuth } from "@clerk/nextjs";
 import { apiFetch } from "@/lib/api";
 import type { Plan } from "@/lib/planConfig";
 import { PublicAppView } from "@/components/public/PublicAppView";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function PreviewClient({ appId }: { appId: string }) {
   const { getToken } = useAuth();
@@ -39,19 +41,28 @@ export default function PreviewClient({ appId }: { appId: string }) {
   return (
     <div className="min-h-screen bg-white">
       <div className="sticky top-0 z-20 border-b bg-white/90 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
-          <div>
+        <div className="mx-auto max-w-8xl py-3 flex items-center justify-between gap-3">
+          
+          <div className="flex justify-around gap-3">
+            <Link href={`/dashboard/apps/${appId}`}>
+              <div className="text-sm font-semibold text-slate-800 font-serif">
+                <ArrowLeft />
+              </div>
+            </Link>
+            <div>
             <div className="text-sm font-semibold text-slate-800 font-serif">Preview</div>
-            {realPlan === "FREE" ? <div className="text-xs text-slate-500">Compare Free vs Pro rendering.</div>:null}
+              {realPlan === "FREE" ? <div className="text-xs text-slate-500">Compare Free vs Pro rendering.</div>:null}
+            </div>
           </div>
-
+          
           <div className="flex items-center gap-3">
             {realPlan === "FREE" ? (
               <div className="flex rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setPreviewPlan("FREE")}
-                  className={`px-4 py-2 text-sm font-medium transition ${
+                  className={`px-4 py-2 text-sm font-medium transition cursor-pointer
+                    ${
                     previewPlan === "FREE"
                       ? "bg-primary/10 text-primary"
                       : "text-slate-600 hover:bg-slate-50"
@@ -62,7 +73,7 @@ export default function PreviewClient({ appId }: { appId: string }) {
                 <button
                   type="button"
                   onClick={() => setPreviewPlan("PRO")}
-                  className={`px-4 py-2 text-sm font-medium transition ${
+                  className={`px-4 py-2 text-sm font-medium transition cursor-pointer ${
                     previewPlan === "PRO"
                       ? "bg-primary/10 text-primary"
                       : "text-slate-600 hover:bg-slate-50"

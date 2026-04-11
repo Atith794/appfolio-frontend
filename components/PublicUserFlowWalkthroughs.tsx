@@ -1,8 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TECH_CATALOG } from "@/lib/techCatalog";
-
+import {
+  Lock, User, FileEdit, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCcw,
+  Home, Search, Package, FileText, Upload, Download, Folder, Receipt,
+  MessageCircle, Phone, Bell, MapPin, CreditCard, ShoppingCart, Cloud, Image,
+  Brain, Settings, Puzzle, Link, Shield, BarChart3, FlaskConical, Rocket,GitBranch, Database
+} from "lucide-react";
 type StepKind = "NODE" | "ARROW";
 type IconType = "EMOJI" | "TECH" | "IMAGE";
 
@@ -13,10 +18,10 @@ type FlowStep = {
   label?: string;
   desc?: string;
   iconType?: IconType;
-  icon?: string; // emoji or image url
+  icon?: string;
   iconRef?: { id: string; name: string; category: string };
-  text?: string; // arrow text
-  color?: string; // blue/green/purple/orange/pink/cyan/yellow
+  text?: string;
+  color?: string;
 };
 
 type Flow = {
@@ -59,6 +64,42 @@ function stableKey(prefix: string, fallbackIndex: number, id?: string) {
   return id ? `${prefix}-${id}` : `${prefix}-idx-${fallbackIndex}`;
 }
 
+const iconMap = {
+  lock: Lock,
+  user: User,
+  fileEdit: FileEdit,
+  checkCircle: CheckCircle,
+  xCircle: XCircle,
+  alertTriangle: AlertTriangle,
+  clock: Clock,
+  refreshCcw: RefreshCcw,
+  home: Home,
+  search: Search,
+  package: Package,
+  fileText: FileText,
+  upload: Upload,
+  download: Download,
+  folder: Folder,
+  receipt: Receipt,
+  messageCircle: MessageCircle,
+  phone: Phone,
+  bell: Bell,
+  mapPin: MapPin,
+  creditCard: CreditCard,
+  shoppingCart: ShoppingCart,
+  cloud: Cloud,
+  image: Image,
+  brain: Brain,
+  settings: Settings,
+  puzzle: Puzzle,
+  link: Link,
+  shield: Shield,
+  barChart3: BarChart3,
+  flaskConical: FlaskConical,
+  rocket: Rocket,
+  database: Database
+};
+
 export default function PublicUserFlowWalkthroughs({
   data,
 }: {
@@ -71,7 +112,6 @@ export default function PublicUserFlowWalkthroughs({
       .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
       .map((f, fi) => ({
         ...f,
-        // normalize ids to avoid key errors
         id: f.id || `flow-${fi}`,
         steps: (Array.isArray(f.steps) ? f.steps : [])
           .slice()
@@ -82,6 +122,13 @@ export default function PublicUserFlowWalkthroughs({
 
   const [activeId, setActiveId] = useState<string>(flows[0]?.id || "");
 
+  useEffect(() => {
+    if (!flows.length) return;
+    if (!activeId || !flows.some((f) => f.id === activeId)) {
+      setActiveId(flows[0].id || "");
+    }
+  }, [flows, activeId]);
+
   const activeFlow = useMemo(
     () => flows.find((f) => f.id === activeId) || flows[0],
     [flows, activeId]
@@ -90,13 +137,15 @@ export default function PublicUserFlowWalkthroughs({
   if (!flows.length) return null;
 
   return (
-    <div>
+    <div className="space-y-8">
       {data?.intro ? (
-        <p className="text-sm text-slate-700 font-serif">{data.intro}</p>
+        <p className="max-w-3xl text-base leading-7 text-slate-500">
+          {data.intro}
+        </p>
       ) : null}
 
       {/* Tabs */}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {flows.map((flow, i) => {
           const isActive = flow.id === (activeFlow?.id || "");
           return (
@@ -104,11 +153,12 @@ export default function PublicUserFlowWalkthroughs({
               key={stableKey("tab", i, flow.id)}
               onClick={() => setActiveId(flow.id!)}
               className={clsx(
-                "px-3 py-2 rounded-xl text-sm font-semibold border transition-all inline-flex items-center gap-2",
+                "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all cursor-pointer",
                 isActive
-                  ? "bg-primary/15 border-primary/40 text-primary"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "border-primary/30 bg-primary/10 text-primary shadow-sm"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
               )}
+              type="button"
             >
               <span>{flow.emoji || "📡"}</span>
               <span>{flow.title || "Flow"}</span>
@@ -117,11 +167,11 @@ export default function PublicUserFlowWalkthroughs({
         })}
       </div>
 
-      {/* Flow visual */}
+      {/* Flow canvas */}
       {activeFlow ? (
-        <div className="mt-4 rounded-2xl border border-slate-900/10 bg-white/70 p-4 shadow-sm">
-          <div className="rounded-2xl border border-slate-900/10 bg-slate-50 p-4">
-            <div className="flex flex-wrap items-start justify-center gap-2">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 md:p-8 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+          <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6 md:p-8 overflow-x-auto">
+            <div className="min-w-max flex items-start justify-start gap-3 md:gap-4">
               {activeFlow.steps.map((step, idx) => {
                 const c = safeColor(step.color);
                 const cc = COLOR_CLASS[c];
@@ -130,82 +180,91 @@ export default function PublicUserFlowWalkthroughs({
                   return (
                     <div
                       key={stableKey("arrow", idx, step.id)}
-                      className="flex flex-col items-center justify-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
+                      className="flex min-h-[140px] flex-col items-center justify-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
                       style={{ animationDelay: `${idx * 60}ms` } as any}
                     >
                       <svg
-                        viewBox="0 0 44 16"
-                        className={clsx("w-10 h-4", cc.text)}
+                        viewBox="0 0 56 18"
+                        className={clsx("h-5 w-14", cc.text)}
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
                       >
-                        {/* Animated dashed line */}
                         <line
-                          x1="1"
-                          y1="8"
-                          x2="34"
-                          y2="8"
+                          x1="2"
+                          y1="9"
+                          x2="44"
+                          y2="9"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="2.2"
                           strokeLinecap="round"
-                          strokeDasharray="5 6"
+                          strokeDasharray="6 7"
                           className="arrow-dash"
                         />
-
-                        {/* Arrow head */}
                         <polygon
-                          points="34,4 42,8 34,12"
+                          points="44,4 54,9 44,14"
                           fill="currentColor"
                           className="arrow-head"
                         />
                       </svg>
 
-                      <div className={clsx("mt-1 text-[11px] font-mono whitespace-nowrap", cc.text)}>
-                        {step.text || "→"}
-                      </div>
+                      {step.text ? (
+                        <div className={clsx("mt-2 text-[11px] font-mono whitespace-nowrap", cc.text)}>
+                          {step.text}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 }
-                // NODE
-                const iconType = (step.iconType || "EMOJI") as IconType;
 
+                const iconType = (step.iconType || "EMOJI") as IconType;
                 let iconEl: React.ReactNode = <span className="text-lg">📍</span>;
 
-                if (iconType === "EMOJI") {
-                  iconEl = <span className="text-lg">{step.icon || "📍"}</span>;
+                // if (iconType === "EMOJI") {
+                //   iconEl = <span className="text-xl">{step.icon || "📍"}</span>;
+                // }
+
+                if (iconType === "EMOJI" && step !== undefined) {
+                  const Icon = iconMap[step?.icon] || MapPin;
+
+                  iconEl = (
+                    <div className="rounded-lg bg-slate-100 text-slate-700">
+                      <Icon size={30} />
+                    </div>
+                  );
                 }
 
                 if (iconType === "IMAGE") {
                   iconEl = step.icon ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={step.icon} alt="" className="h-6 w-6 object-contain" />
+                    <img src={step.icon} alt="" className="h-7 w-7 object-contain" />
                   ) : (
-                    <span className="text-lg">🖼️</span>
+                    <span className="text-xl">🖼️</span>
                   );
                 }
 
                 if (iconType === "TECH") {
-                  console.log("Step:",step)
                   const techId = step.iconRef?.id;
                   const tech = techId ? getTechById(techId) : undefined;
 
                   iconEl = tech?.iconClass ? (
-                    <i className={`${tech.iconClass} colored`} style={{ fontSize: 22, lineHeight: 1 }} />
+                    <i
+                      className={`${tech.iconClass} colored`}
+                      style={{ fontSize: 24, lineHeight: 1 }}
+                    />
                   ) : (
-                    <span className="text-lg">⚙️</span>
+                    <span className="text-xl">⚙️</span>
                   );
                 }
 
                 return (
                   <div
                     key={stableKey("node", idx, step.id)}
-                    className="flex flex-col items-center gap-2 min-w-23 max-w-35 text-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
+                    className="flex min-h-[140px] w-[148px] shrink-0 flex-col items-center gap-3 text-center animate-[fadeInUp_220ms_ease-out_forwards] opacity-0"
                     style={{ animationDelay: `${idx * 60}ms` } as any}
                   >
                     <div
                       className={clsx(
-                        "h-12 w-12 rounded-2xl grid place-items-center bg-white border border-slate-900/10 shadow-sm ring-2",
+                        "grid h-14 w-14 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm ring-2",
                         cc.ring
                       )}
                       title={step.iconRef?.name || step.label || ""}
@@ -213,12 +272,12 @@ export default function PublicUserFlowWalkthroughs({
                       {iconEl}
                     </div>
 
-                    <div className="text-[12px] font-semibold text-slate-900 font-serif">
+                    <div className="text-sm font-semibold text-slate-900">
                       {step.label || "Step"}
                     </div>
 
                     {step.desc ? (
-                      <div className="text-[11px] text-slate-500 leading-snug">
+                      <div className="text-xs leading-5 text-slate-500">
                         {step.desc}
                       </div>
                     ) : null}
@@ -230,19 +289,35 @@ export default function PublicUserFlowWalkthroughs({
 
           <style jsx>{`
             @keyframes fadeInUp {
-              from { opacity: 0; transform: translateY(8px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-              /* Subtle “flow” motion: dashes move to the right */
-            @keyframes dashMove {
-              from { stroke-dashoffset: 0; }
-              to { stroke-dashoffset: -22; }
+              from {
+                opacity: 0;
+                transform: translateY(8px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
             }
 
-            /* Tiny, subtle head “nudge” (optional but nice) */
+            @keyframes dashMove {
+              from {
+                stroke-dashoffset: 0;
+              }
+              to {
+                stroke-dashoffset: -26;
+              }
+            }
+
             @keyframes headNudge {
-              0%, 100% { transform: translateX(0); opacity: 0.9; }
-              50% { transform: translateX(0.6px); opacity: 1; }
+              0%,
+              100% {
+                transform: translateX(0);
+                opacity: 0.9;
+              }
+              50% {
+                transform: translateX(0.6px);
+                opacity: 1;
+              }
             }
 
             :global(.arrow-dash) {
@@ -255,7 +330,6 @@ export default function PublicUserFlowWalkthroughs({
               animation: headNudge 1.25s ease-in-out infinite;
             }
 
-            /* Respect reduced motion */
             @media (prefers-reduced-motion: reduce) {
               :global(.arrow-dash),
               :global(.arrow-head) {

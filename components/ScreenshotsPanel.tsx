@@ -802,7 +802,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
         <div className="border rounded-2xl p-4 bg-slate-50 mb-4 flex items-center justify-between">
           <div>
             <div className="font-semibold">Screenshot groups</div>
-            <div className="text-sm text-slate-500 font-serif">Group screenshots into sections (Pro).</div>
+            <div className="text-sm text-slate-500 font-serif">Group screenshots into sections.</div>
           </div>
           <button
             className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-primary hover:bg-slate-200 hover:cursor-pointer"
