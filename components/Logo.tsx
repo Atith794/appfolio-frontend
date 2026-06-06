@@ -6,9 +6,9 @@ function Logo() {
     <Link href="/dashboard" className="flex items-center gap-3 cursor-pointer">
       <div className="flex items-center gap-3">
         <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white font-mono">
-          APF
+          APS
         </div>
-        <h2 className="text-black text-lg font-black tracking-tight font-serif">AppFolio</h2>
+        <h2 className="text-black text-lg font-black tracking-tight font-serif">AppShelves</h2>
       </div>
     </Link>
   )

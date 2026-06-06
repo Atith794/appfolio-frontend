@@ -33,15 +33,30 @@ const FEATURE_ROWS = [
   { key: "share", label: "Public share links", free: true, pro: true },
   { key: "shots", label: "Screenshots per app", free: "6", pro: "20" },
   { key: "groups", label: "Screenshot groups", free: false, pro: true },
-  { key: "cover", label: "Choose cover screenshot + themes", free: false, pro: true },
-  { key: "walkthrough", label: "Userflow walkthrough builder", free: true, pro: true },
+  {
+    key: "cover",
+    label: "Choose cover screenshot + themes",
+    free: false,
+    pro: true,
+  },
+  {
+    key: "walkthrough",
+    label: "Userflow walkthrough builder",
+    free: true,
+    pro: true,
+  },
   {
     key: "premiumSections",
     label: "Architecture + Integrations & Key Decisions",
     free: "Preview (locked)",
     pro: "Unlocked",
   },
-  { key: "branding", label: "Remove Appfolio branding", free: false, pro: true },
+  {
+    key: "branding",
+    label: "Remove AppShelves branding",
+    free: false,
+    pro: true,
+  },
   { key: "badge", label: "Pro badge", free: false, pro: true },
 ];
 
@@ -129,12 +144,13 @@ export default function PricingPage() {
       });
 
       if (data?.alreadyPro) {
-        alert("You are already Pro ✅");
+        alert("You are already Pro");
         router.push("/dashboard");
         return;
       }
 
       if (data?.provider === "razorpay") {
+
         const ok = await loadRazorpay();
         if (!ok) {
           alert("Razorpay SDK failed to load");
@@ -144,24 +160,53 @@ export default function PricingPage() {
         const rzp = new (window as any).Razorpay({
           key: data.keyId,
           subscription_id: data.subscriptionId,
-          name: "Appfolio Pro",
-          description: chosenBilling === "MONTHLY" ? "Pro Monthly" : "Pro Yearly",
-          handler: async (resp: any) => {
-            await apiFetch("/billing/razorpay/verify-subscription", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(resp),
-            });
+          name: "AppShelves Pro",
+          description:
+            chosenBilling === "MONTHLY" ? "Pro Monthly" : "Pro Yearly",
 
-            router.push("/dashboard");
-            router.refresh();
+          handler: async (resp: any) => {
+            console.log("RAZORPAY HANDLER FIRED");
+            console.log("Razorpay response:", resp);
+
+            try {
+              const freshToken = await getToken();
+
+              console.log("Fresh token exists:", !!freshToken);
+
+              if (!freshToken) {
+                alert("Session expired. Please login again.");
+                return;
+              }
+
+              console.log("Calling verify-subscription API...");
+
+              const verifyResponse = await apiFetch(
+                "/billing/razorpay/verify-subscription",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${freshToken}`,
+                  },
+                  body: JSON.stringify(resp),
+                },
+              );
+
+              console.log("Verify subscription response:", verifyResponse);
+
+              router.push("/dashboard");
+              router.refresh();
+            } catch (err: any) {
+              console.error("Verify subscription failed:", err);
+              alert(
+                err?.message || "Payment completed, but verification failed",
+              );
+            }
           },
         });
 
         rzp.on("payment.failed", function (resp: any) {
+          console.error("Razorpay payment failed:", resp);
           alert(resp?.error?.description || "Payment failed");
         });
 
@@ -173,7 +218,6 @@ export default function PricingPage() {
         window.location.href = data.url;
         return;
       }
-
       throw new Error(data?.message || "Invalid checkout response");
     } catch (e: any) {
       alert(e?.message || "Upgrade failed");
@@ -186,7 +230,9 @@ export default function PricingPage() {
     return (
       <main className="mx-auto max-w-4xl px-4 py-10">
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-          <h1 className="text-xl font-bold text-red-700">Unable to load pricing</h1>
+          <h1 className="text-xl font-bold text-red-700">
+            Unable to load pricing
+          </h1>
           <p className="mt-2 text-sm text-red-600">{pricingError}</p>
           <button
             onClick={() => window.location.reload()}
@@ -241,8 +287,9 @@ export default function PricingPage() {
         </h1>
 
         <p className="mt-3 max-w-2xl font-serif text-slate-500">
-          Recruiters don’t read long text. Appfolio helps you present your app like a
-          case study — screenshots, user flows, architecture and decisions.
+          Recruiters don’t read long text. AppShelves helps you present your app
+          like a case study — screenshots, user flows, architecture and
+          decisions.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3 font-mono text-xs text-slate-500">
@@ -302,8 +349,12 @@ export default function PricingPage() {
         <div className="group rounded-2xl border-2 border-dashed border-slate-200 p-6 transition-all hover:border-primary/50 hover:bg-primary/5">
           <div className="flex items-start justify-between">
             <div>
-              <div className="font-serif text-lg font-bold text-slate-900">Free</div>
-              <div className="mt-1 font-mono text-sm text-slate-500">Get started</div>
+              <div className="font-serif text-lg font-bold text-slate-900">
+                Free
+              </div>
+              <div className="mt-1 font-mono text-sm text-slate-500">
+                Get started
+              </div>
             </div>
 
             <div className="font-serif text-2xl font-black text-slate-900">
@@ -312,23 +363,31 @@ export default function PricingPage() {
           </div>
 
           <div className="mt-4 space-y-2">
-            {["Unlimited apps", "Up to 6 screenshots/app", "Walkthrough builder", "Public share link"].map(
-              (f) => (
-                <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
-                    <Check size={14} />
-                  </span>
-                  <span className="font-serif">{f}</span>
-                </div>
-              )
-            )}
+            {[
+              "Unlimited apps",
+              "Up to 6 screenshots/app",
+              "Walkthrough builder",
+              "Public share link",
+            ].map((f) => (
+              <div
+                key={f}
+                className="flex items-start gap-2 text-sm text-slate-700"
+              >
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
+                  <Check size={14} />
+                </span>
+                <span className="font-serif">{f}</span>
+              </div>
+            ))}
             <div className="flex items-start gap-2 text-sm text-slate-700">
               <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
                 <HelpCircle size={14} />
               </span>
               <span className="font-serif">
                 Architecture + Key Decisions sections shown as{" "}
-                <span className="font-mono text-primary/80">locked preview</span>
+                <span className="font-mono text-primary/80">
+                  locked preview
+                </span>
               </span>
             </div>
           </div>
@@ -345,29 +404,40 @@ export default function PricingPage() {
         <div className="rounded-2xl border-2 border-slate-200 p-6 transition-all hover:border-primary/40 hover:bg-primary/5">
           <div className="flex items-start justify-between">
             <div>
-              <div className="font-serif text-lg font-black text-slate-900">Pro Monthly</div>
-              <div className="mt-1 font-mono text-sm text-slate-500">Flexible billing</div>
+              <div className="font-serif text-lg font-black text-slate-900">
+                Pro Monthly
+              </div>
+              <div className="mt-1 font-mono text-sm text-slate-500">
+                Flexible billing
+              </div>
             </div>
           </div>
 
           <div className="mt-4">
             <div className="font-serif text-3xl font-black text-slate-900">
               {monthlyPrice}
-              <span className="ml-2 font-mono text-xs text-slate-500">/ month</span>
+              <span className="ml-2 font-mono text-xs text-slate-500">
+                / month
+              </span>
             </div>
           </div>
 
           <div className="mt-4 space-y-2">
-            {["Everything in Pro", "Good for short job-search cycles", "Cancel anytime"].map(
-              (f) => (
-                <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
-                    <Check size={14} />
-                  </span>
-                  <span className="font-serif">{f}</span>
-                </div>
-              )
-            )}
+            {[
+              "Everything in Pro",
+              "Good for short job-search cycles",
+              "Cancel anytime",
+            ].map((f) => (
+              <div
+                key={f}
+                className="flex items-start gap-2 text-sm text-slate-700"
+              >
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
+                  <Check size={14} />
+                </span>
+                <span className="font-serif">{f}</span>
+              </div>
+            ))}
           </div>
 
           <button
@@ -387,7 +457,9 @@ export default function PricingPage() {
         <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-6 transition-all hover:border-primary/40 hover:bg-primary/5">
           <div className="flex items-start justify-between">
             <div>
-              <div className="font-serif text-lg font-black text-slate-900">Pro Yearly</div>
+              <div className="font-serif text-lg font-black text-slate-900">
+                Pro Yearly
+              </div>
               <div className="mt-1 font-mono text-sm text-slate-500">
                 Best for serious job hunters
               </div>
@@ -401,7 +473,9 @@ export default function PricingPage() {
           <div className="mt-4">
             <div className="font-serif text-3xl font-black text-slate-900">
               {yearlyPrice}
-              <span className="ml-2 font-mono text-xs text-slate-500">/ year</span>
+              <span className="ml-2 font-mono text-xs text-slate-500">
+                / year
+              </span>
             </div>
 
             {savePct ? (
@@ -417,7 +491,10 @@ export default function PricingPage() {
               "Maximum savings",
               "Perfect for 6–12 months of job switching",
             ].map((f) => (
-              <div key={f} className="flex items-start gap-2 text-sm text-slate-700">
+              <div
+                key={f}
+                className="flex items-start gap-2 text-sm text-slate-700"
+              >
                 <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-slate-100">
                   <Check size={14} />
                 </span>
@@ -443,7 +520,9 @@ export default function PricingPage() {
 
       <section className="mt-10">
         <div>
-          <h2 className="font-serif text-xl font-black text-slate-900">Compare plans</h2>
+          <h2 className="font-serif text-xl font-black text-slate-900">
+            Compare plans
+          </h2>
           <p className="text-sm font-serif text-slate-500">
             The Pro plan is built to unlock premium portfolio credibility.
           </p>
@@ -451,9 +530,15 @@ export default function PricingPage() {
 
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="grid grid-cols-3 border-b border-slate-200 bg-slate-50">
-            <div className="p-4 font-serif text-sm font-semibold text-slate-700">Feature</div>
-            <div className="p-4 font-serif text-sm font-semibold text-slate-700">Free</div>
-            <div className="p-4 font-serif text-sm font-semibold text-slate-700">Pro</div>
+            <div className="p-4 font-serif text-sm font-semibold text-slate-700">
+              Feature
+            </div>
+            <div className="p-4 font-serif text-sm font-semibold text-slate-700">
+              Free
+            </div>
+            <div className="p-4 font-serif text-sm font-semibold text-slate-700">
+              Pro
+            </div>
           </div>
 
           {FEATURE_ROWS.map((row) => (
@@ -461,9 +546,15 @@ export default function PricingPage() {
               key={row.key}
               className="grid grid-cols-3 border-b border-slate-100 last:border-b-0"
             >
-              <div className="p-4 font-serif text-sm text-slate-700">{row.label}</div>
+              <div className="p-4 font-serif text-sm text-slate-700">
+                {row.label}
+              </div>
               <div className="p-4 font-mono text-sm text-slate-700">
-                {typeof row.free === "boolean" ? (row.free ? "✓" : "—") : row.free}
+                {typeof row.free === "boolean"
+                  ? row.free
+                    ? "✓"
+                    : "—"
+                  : row.free}
               </div>
               <div className="p-4 font-mono text-sm text-slate-700">
                 {typeof row.pro === "boolean" ? (row.pro ? "✓" : "—") : row.pro}
@@ -478,9 +569,16 @@ export default function PricingPage() {
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {FAQS.map((f) => (
-            <div key={f.q} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="font-serif font-semibold text-slate-900">{f.q}</div>
-              <div className="mt-2 font-serif text-sm text-slate-600">{f.a}</div>
+            <div
+              key={f.q}
+              className="rounded-2xl border border-slate-200 bg-white p-5"
+            >
+              <div className="font-serif font-semibold text-slate-900">
+                {f.q}
+              </div>
+              <div className="mt-2 font-serif text-sm text-slate-600">
+                {f.a}
+              </div>
             </div>
           ))}
         </div>

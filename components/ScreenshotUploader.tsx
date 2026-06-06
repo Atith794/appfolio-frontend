@@ -2,6 +2,8 @@
 
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
+import { getFileHash } from "@/utils/getFileHash";
+import { apiFetch } from "@/lib/api";
 
 export function ScreenshotUploader({ appId }: { appId: string }) {
   const { getToken } = useAuth();
@@ -9,11 +11,19 @@ export function ScreenshotUploader({ appId }: { appId: string }) {
   async function handleUpload(file: File) {
     const token = await getToken();
     if (!token) return;
-
+    const fileHash = await getFileHash(file);
     // 1. get signature
-    const sigRes = await fetch("http://localhost:4000/uploads/cloudinary-signature", {
+    // const sigRes = await fetch("http://localhost:4000/uploads/cloudinary-signature", {
+    const sigRes = await apiFetch("/uploads/cloudinary-signature", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        "Content-Type": "application/json", 
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        appId,
+        fileHash
+      })
     });
     const sig = await sigRes.json();
     // console.log("Signature api_key:",sig);
@@ -24,7 +34,9 @@ export function ScreenshotUploader({ appId }: { appId: string }) {
     form.append("timestamp", sig.timestamp);
     form.append("signature", sig.signature);
     form.append("folder", sig.folder);
-
+    form.append("public_id", sig.public_id);
+    form.append("overwrite", "false");
+    form.append("transformation", sig.transformation);
     const uploadRes = await axios.post(
       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
     //   `${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}`,

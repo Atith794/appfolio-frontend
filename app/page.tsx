@@ -10,7 +10,7 @@ export default function Home() {
             <div className="size-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20 font-mono">
               APF
             </div>
-            <h2 className="text-black text-xl font-black tracking-tight font-serif">AppFolio</h2>
+            <h2 className="text-black text-xl font-black tracking-tight font-serif">AppShelves</h2>
           </div>
           <div className="hidden md:flex flex-1 justify-end gap-8 items-center">
             <nav className="flex items-center gap-8">
@@ -48,12 +48,12 @@ export default function Home() {
               </h1>
               {/* <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed max-w-[540px]"> */}
               <p className="text-gray-400 text-base sm:text-lg md:text-xl font-medium leading-relaxed max-w-[540px]">
-                  Appfolio helps mobile app developers present their mobile apps with screens, flows, architecture, and decisions — all in one professional, shareable page.
+                  AppShelves helps mobile app developers present their mobile apps with screens, flows, architecture, and decisions — all in one professional, shareable page.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <SignedOut>
                 <SignUpButton mode="modal">
-                  <button className="flex min-w-[200px] cursor-pointer items-center justify-center rounded-xl h-14 px-8 bg-primary text-white text-sm sm:text-base md:text-lg font-bold shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all">Create your Appfolio</button>
+                  <button className="flex min-w-[200px] cursor-pointer items-center justify-center rounded-xl h-14 px-8 bg-primary text-white text-sm sm:text-base md:text-lg font-bold shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all">Create your AppShelves app portfolio</button>
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
@@ -118,7 +118,7 @@ export default function Home() {
             <button className="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors">Creative</button>
             </div> */}
             </div>
-            <h1 className="text-primary text-3xl md:text-4xl font-black leading-tight tracking-tight font-serif">What Appfolio Does?</h1>
+            <h1 className="text-primary text-3xl md:text-4xl font-black leading-tight tracking-tight font-serif">What AppShelves Does?</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 py-10">
               <div className="group bg-slatePanel rounded-xl overflow-hidden border border-white/5 flex flex-col hover:border-primary/50 transition-all duration-300">
@@ -214,7 +214,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-20 pt-8 border-t border-white/5 text-gray-600 text-[10px] flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="font-serif">© 2024 AppFolio Inc. All rights reserved.</p>
+            <p className="font-serif">© 2026 AppShelves Inc. All rights reserved.</p>
           </div>
         </div>
       </footer>

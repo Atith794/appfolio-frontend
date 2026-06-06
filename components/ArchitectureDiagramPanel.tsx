@@ -36,6 +36,7 @@ import {
 } from "@/components/diagram/nodes";
 import { toPng } from "html-to-image";
 import { AlignCenter, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalDistributeCenter, AlignLeft, AlignRight, AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter, Circle, Cloud, Database, Diamond, RectangleHorizontal, Redo, Triangle, Type, Undo } from 'lucide-react';
+import { getFileHash } from "@/utils/getFileHash";
 
 type NodeTypeKey = "rect" | "db" | "diamond" | "circle" | "triangle" | "text" | "cloud";
 
@@ -309,9 +310,18 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
 
       const file = new File([blob], `architecture-${appId}.png`, { type: "image/png" });
 
+      const fileHash = await getFileHash(file);
+
       const sig = await apiFetch("/uploads/cloudinary-signature", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          appId,
+          fileHash
+        })
       });
 
       const form = new FormData();
@@ -320,6 +330,9 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
       form.append("timestamp", String((sig as any).timestamp));
       form.append("signature", (sig as any).signature);
       form.append("folder", (sig as any).folder);
+      form.append("public_id", (sig as any).public_id);
+      form.append("overwrite", "false");
+      form.append("transformation", (sig as any).transformation);
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");

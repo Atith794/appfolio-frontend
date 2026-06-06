@@ -193,7 +193,7 @@ export function PublicAppView({
                     </h1>
 
                     <p className="mt-3 max-w-xl text-base leading-7 text-slate-600 font-serif">
-                      {app?.shortDescription || "A modern app showcase page built with Appfolio."}
+                      {app?.shortDescription || "A modern app showcase page built with AppShelves."}
                     </p>
 
                     {overviewBullets.length ? (
@@ -423,7 +423,7 @@ export function PublicAppView({
             {/* FOOTER */}
            {!isPro && <footer className="flex flex-col gap-4 border-t border-slate-200/70 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                Built with <span className="font-semibold text-slate-800">Appfolio</span>
+                Built with <span className="font-semibold text-slate-800">AppShelves</span>
               </div>
               <div>{user?.name || user?.username || "Passionate Developer"}</div>
             </footer>}

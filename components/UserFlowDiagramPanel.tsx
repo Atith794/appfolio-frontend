@@ -32,13 +32,41 @@ import {
   CircleNode,
   TriangleNode,
   TextNode,
-  CloudNode
+  CloudNode,
 } from "@/components/diagram/nodes";
 import { toPng } from "html-to-image";
-import { AlignCenter, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalDistributeCenter, AlignLeft, AlignRight, AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter, Circle, Cloud, Database, Diamond, RectangleHorizontal, Redo, Triangle, Type, Undo } from 'lucide-react';
+import {
+  AlignCenter,
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  AlignEndHorizontal,
+  AlignEndVertical,
+  AlignHorizontalDistributeCenter,
+  AlignLeft,
+  AlignRight,
+  AlignStartHorizontal,
+  AlignStartVertical,
+  AlignVerticalDistributeCenter,
+  Circle,
+  Cloud,
+  Database,
+  Diamond,
+  RectangleHorizontal,
+  Redo,
+  Triangle,
+  Type,
+  Undo,
+} from "lucide-react";
 import { TECH_CATALOG, TechCategory } from "@/lib/techCatalog";
 
-type NodeTypeKey = "rect" | "db" | "diamond" | "circle" | "triangle" | "text" | "cloud";
+type NodeTypeKey =
+  | "rect"
+  | "db"
+  | "diamond"
+  | "circle"
+  | "triangle"
+  | "text"
+  | "cloud";
 type UserFlowMode = "TEXT" | "DIAGRAM" | "BOTH";
 const FILL_COLORS = [
   { name: "Default", value: "#ffffff" },
@@ -110,7 +138,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
       text: TextNode,
       cloud: CloudNode,
     }),
-    []
+    [],
   );
 
   // Edge defaults: smooth step + arrowheads
@@ -120,36 +148,36 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
       markerEnd: { type: MarkerType.ArrowClosed },
       animated: false,
     }),
-    []
+    [],
   );
 
   async function saveUserFlowText() {
     try {
-        setSavingText(true);
-        setError("");
+      setSavingText(true);
+      setError("");
 
-        const token = await getToken();
-        if (!token) return;
+      const token = await getToken();
+      if (!token) return;
 
-        const cleaned = bullets.map((b) => b.trim()).filter(Boolean);
+      const cleaned = bullets.map((b) => b.trim()).filter(Boolean);
 
-        await apiFetch(`/apps/${appId}/user-flow-text`, {
+      await apiFetch(`/apps/${appId}/user-flow-text`, {
         method: "PATCH",
         headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-            mode: flowMode,
-            bullets: cleaned,
+          mode: flowMode,
+          bullets: cleaned,
         }),
-        });
+      });
 
-        alert("User flow text saved");
+      alert("User flow text saved");
     } catch (e: any) {
-        setError(e.message || "Failed to save user flow text");
+      setError(e.message || "Failed to save user flow text");
     } finally {
-        setSavingText(false);
+      setSavingText(false);
     }
   }
 
@@ -176,8 +204,8 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
         const t = (data as any).app?.userFlowText;
 
         if (t) {
-            setFlowMode((t.mode as UserFlowMode) || "BOTH");
-            setBullets(Array.isArray(t.bullets) ? t.bullets : []);
+          setFlowMode((t.mode as UserFlowMode) || "BOTH");
+          setBullets(Array.isArray(t.bullets) ? t.bullets : []);
         }
 
         if (d) {
@@ -195,13 +223,15 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
   }, [appId]);
 
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    []
+    (changes: NodeChange[]) =>
+      setNodes((nds) => applyNodeChanges(changes, nds)),
+    [],
   );
 
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    []
+    (changes: EdgeChange[]) =>
+      setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [],
   );
 
   const onConnect = useCallback(
@@ -216,11 +246,11 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
             markerEnd: { type: MarkerType.ArrowClosed },
             animated: false,
           },
-          eds
-        )
+          eds,
+        ),
       );
     },
-    [pushHistory]
+    [pushHistory],
   );
 
   const DEFAULT_FILL = "#ffffff";
@@ -228,7 +258,6 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
 
   function addNode(type: NodeTypeKey) {
     const id = crypto.randomUUID();
-    
 
     // const styleByType: Record<NodeTypeKey, any> = {
     const styleByType: Partial<Record<NodeTypeKey, any>> = {
@@ -306,8 +335,8 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
     const ids = new Set(selected.nodes.map((n) => n.id));
     setNodes((all) =>
       all.map((n) =>
-        ids.has(n.id) ? { ...n, data: { ...(n.data as any), fill } } : n
-      )
+        ids.has(n.id) ? { ...n, data: { ...(n.data as any), fill } } : n,
+      ),
     );
   }
 
@@ -318,8 +347,8 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
     const ids = new Set(selected.nodes.map((n) => n.id));
     setNodes((all) =>
       all.map((n) =>
-        ids.has(n.id) ? { ...n, data: { ...(n.data as any), border } } : n
-      )
+        ids.has(n.id) ? { ...n, data: { ...(n.data as any), border } } : n,
+      ),
     );
   }
 
@@ -350,13 +379,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
       if (!instance) throw new Error("React Flow not initialized");
 
       const bounds = getNodesBounds(nodes);
-      const viewport = getViewportForBounds(
-        bounds,
-        800,
-        600,
-        0.15,
-        2
-      );
+      const viewport = getViewportForBounds(bounds, 800, 600, 0.15, 2);
 
       instance.setViewport(viewport, { duration: 300 });
 
@@ -381,7 +404,10 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
 
       const sig = await apiFetch("/uploads/cloudinary-signature", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type":"application/json", 
+          Authorization: `Bearer ${token}` 
+        },
       });
 
       const form = new FormData();
@@ -390,13 +416,18 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
       form.append("timestamp", String((sig as any).timestamp));
       form.append("signature", (sig as any).signature);
       form.append("folder", (sig as any).folder);
+      form.append("public_id", (sig as any).public_id);
+      form.append("overwrite", "false");
+      form.append("transformation", (sig as any).transformation);
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       if (!cloudName) throw new Error("Cloudinary config missing");
 
-      const uploadRes = await (await import("axios")).default.post(
+      const uploadRes = await (
+        await import("axios")
+      ).default.post(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        form
+        form,
       );
 
       const imageUrl = uploadRes.data.secure_url;
@@ -478,9 +509,13 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           eds.filter((ed) => {
             if (selectedEdgeIds.has(ed.id)) return false;
             // also remove edges connected to deleted nodes
-            if (selectedNodeIds.has(ed.source) || selectedNodeIds.has(ed.target)) return false;
+            if (
+              selectedNodeIds.has(ed.source) ||
+              selectedNodeIds.has(ed.target)
+            )
+              return false;
             return true;
-          })
+          }),
         );
         return;
       }
@@ -508,7 +543,10 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
         // Optional: duplicate edges only if both endpoints are selected
         const selectedNodeIds = new Set(selected.nodes.map((n) => n.id));
         const newEdges = edges
-          .filter((ed) => selectedNodeIds.has(ed.source) && selectedNodeIds.has(ed.target))
+          .filter(
+            (ed) =>
+              selectedNodeIds.has(ed.source) && selectedNodeIds.has(ed.target),
+          )
           .map((ed) => ({
             ...ed,
             id: crypto.randomUUID(),
@@ -520,8 +558,12 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           }));
 
         // unselect old nodes
-        setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(newNodes));
-        setEdges((eds) => eds.map((e) => ({ ...e, selected: false })).concat(newEdges));
+        setNodes((nds) =>
+          nds.map((n) => ({ ...n, selected: false })).concat(newNodes),
+        );
+        setEdges((eds) =>
+          eds.map((e) => ({ ...e, selected: false })).concat(newEdges),
+        );
         return;
       }
     }
@@ -537,7 +579,9 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
     return { w, h };
   }
 
-  function alignSelected(mode: "left" | "hcenter" | "right" | "top" | "vcenter" | "bottom") {
+  function alignSelected(
+    mode: "left" | "hcenter" | "right" | "top" | "vcenter" | "bottom",
+  ) {
     if (selected.nodes.length < 2) return;
 
     // snapshot for undo
@@ -580,7 +624,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
         if (mode === "vcenter") y = vcenter - h / 2;
 
         return { ...n, position: { x, y } };
-      })
+      }),
     );
   }
 
@@ -597,7 +641,11 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
         const { w, h } = getSize(n);
         return { n, w, h };
       })
-      .sort((a, b) => (axis === "x" ? a.n.position.x - b.n.position.x : a.n.position.y - b.n.position.y));
+      .sort((a, b) =>
+        axis === "x"
+          ? a.n.position.x - b.n.position.x
+          : a.n.position.y - b.n.position.y,
+      );
 
     if (axis === "x") {
       const first = items[0];
@@ -614,7 +662,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           const idx = items.findIndex((it) => it.n.id === n.id);
           if (idx === 0 || idx === items.length - 1) return n;
           return { ...n, position: { x: start + step * idx, y: n.position.y } };
-        })
+        }),
       );
     } else {
       const first = items[0];
@@ -631,7 +679,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           const idx = items.findIndex((it) => it.n.id === n.id);
           if (idx === 0 || idx === items.length - 1) return n;
           return { ...n, position: { x: n.position.x, y: start + step * idx } };
-        })
+        }),
       );
     }
   }
@@ -641,51 +689,51 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
   return (
     <section style={{ marginTop: 16 }}>
       <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-xs font-semibold text-slate-600 mr-2">User Flow Mode</span>
+        <span className="text-xs font-semibold text-slate-600 mr-2">
+          User Flow Mode
+        </span>
 
-            {(["DIAGRAM", "TEXT", "BOTH"] as const).map((m) => (
-                <button
-                key={m}
-                onClick={() => setFlowMode(m)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium border ${
-                    flowMode === m
-                    ? "bg-primary/15 border-primary/40 text-primary"
-                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                }`}
-                >
-                {m === "DIAGRAM" ? "Diagram" : m === "TEXT" ? "Text" : "Both"}
-                </button>
-            ))}
+        {(["DIAGRAM", "TEXT", "BOTH"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setFlowMode(m)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium border ${
+              flowMode === m
+                ? "bg-primary/15 border-primary/40 text-primary"
+                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            {m === "DIAGRAM" ? "Diagram" : m === "TEXT" ? "Text" : "Both"}
+          </button>
+        ))}
 
-            <div className="w-4" />
-            
-      </div>  
+        <div className="w-4" />
+      </div>
       <div className="border-2 border-dashed border-slate-200 rounded-xl p-3">
-        
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
-            title="Rectangle" 
+            title="Rectangle"
             onClick={() => addNode("rect")}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
           >
             <RectangleHorizontal />
           </button>
           <button
-            title="Cylinder" 
+            title="Cylinder"
             onClick={() => addNode("db")}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
           >
             <Database />
           </button>
           <button
-            title="Diamond" 
+            title="Diamond"
             onClick={() => addNode("diamond")}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
           >
             <Diamond />
           </button>
           <button
-            title="Circle" 
+            title="Circle"
             onClick={() => addNode("circle")}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
           >
@@ -698,9 +746,9 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           >
             <Triangle />
           </button>
-          <button 
+          <button
             title="Cloud"
-            onClick={() => addNode("cloud")} 
+            onClick={() => addNode("cloud")}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20"
           >
             <Cloud />
@@ -751,31 +799,63 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
             <Redo />
           </button>
           <div className="flex flex-wrap items-center gap-2">
-            <button title="Align Left" onClick={() => alignSelected("left")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align Left"
+              onClick={() => alignSelected("left")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignStartVertical />
             </button>
-            <button title="Align Center" onClick={() => alignSelected("hcenter")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align Center"
+              onClick={() => alignSelected("hcenter")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignCenterVertical />
             </button>
-            <button title="Align Right" onClick={() => alignSelected("right")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align Right"
+              onClick={() => alignSelected("right")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignEndVertical />
             </button>
 
-            <button title="Align to Top" onClick={() => alignSelected("top")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align to Top"
+              onClick={() => alignSelected("top")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignStartHorizontal />
             </button>
-            <button title="Align to Middle" onClick={() => alignSelected("vcenter")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align to Middle"
+              onClick={() => alignSelected("vcenter")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignCenterHorizontal />
             </button>
-            <button title="Align to Bottom" onClick={() => alignSelected("bottom")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Align to Bottom"
+              onClick={() => alignSelected("bottom")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               <AlignEndHorizontal />
             </button>
 
-            <button title="Distribute H" onClick={() => distributeSelected("x")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Distribute H"
+              onClick={() => distributeSelected("x")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               {/* Distribute H */}
               <AlignVerticalDistributeCenter />
             </button>
-            <button title="Distribute V" onClick={() => distributeSelected("y")} className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200">
+            <button
+              title="Distribute V"
+              onClick={() => distributeSelected("y")}
+              className="px-3 py-2 rounded-lg text-sm text-primary bg-slate-100 hover:bg-slate-200"
+            >
               {/* Distribute V */}
               <AlignHorizontalDistributeCenter />
             </button>
@@ -804,7 +884,10 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
                   title={c.name}
                   className="w-6 h-6 rounded-md border border-slate-300 bg-white"
                 >
-                  <span className="block w-full h-full rounded-md" style={{ border: `3px solid ${c.value}` }} />
+                  <span
+                    className="block w-full h-full rounded-md"
+                    style={{ border: `3px solid ${c.value}` }}
+                  />
                 </button>
               ))}
             </div>
@@ -827,9 +910,8 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           </button> */}
 
           {error && <span className="text-sm text-red-600">{error}</span>}
-
         </div>
-            
+
         {/* <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
           <ReactFlow
             nodeTypes={nodeTypes}
@@ -863,129 +945,143 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
           </ReactFlow>
         </div> */}
         {flowMode !== "DIAGRAM" && (
-                <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-slate-800">User Flow Steps</p>
-                    <button
-                        type="button"
-                        onClick={() => setBullets((b) => [...b, ""])}
-                        className="px-3 py-2 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20"
-                    >
-                        + Add step
-                    </button>
-                    </div>
-
-                    {bullets.length === 0 ? (
-                    <p className="text-xs text-slate-500">Add 3–10 steps like “Login → Home → Create Post → Publish”.</p>
-                    ) : (
-                    <div className="space-y-2">
-                        {bullets.map((step, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                            <div className="mt-2 text-xs font-semibold text-slate-500 w-6">{idx + 1}.</div>
-
-                            <textarea
-                            value={step}
-                            onChange={(e) =>
-                                setBullets((arr) => arr.map((x, i) => (i === idx ? e.target.value : x)))
-                            }
-                            rows={2}
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-primary/25"
-                            placeholder="Describe the step..."
-                            />
-
-                            <div className="flex flex-col gap-2">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                setBullets((arr) => arr.filter((_, i) => i !== idx))
-                                }
-                                className="px-2 py-1 rounded-md text-xs bg-danger/10 text-danger hover:bg-danger/20"
-                                title="Remove"
-                            >
-                                ✕
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                setBullets((arr) => {
-                                    if (idx === 0) return arr;
-                                    const copy = [...arr];
-                                    [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-                                    return copy;
-                                })
-                                }
-                                className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                title="Move up"
-                            >
-                                ↑
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                setBullets((arr) => {
-                                    if (idx === arr.length - 1) return arr;
-                                    const copy = [...arr];
-                                    [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
-                                    return copy;
-                                })
-                                }
-                                className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                title="Move down"
-                            >
-                                ↓
-                            </button>
-                            </div>
-                        </div>
-                        ))}
-                    </div>
-                    )}
-                    {flowMode !== "DIAGRAM" && <button
-                        onClick={saveUserFlowText}
-                        disabled={savingText}
-                        className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60"
-                    >
-                        {savingText ? "Saving..." : "Save text"}
-                    </button>}
-                </div>
-            )}
-
-            
-        
-        {flowMode !== "TEXT" && (
-            <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
-                <ReactFlow
-                    nodeTypes={nodeTypes}
-                    nodes={nodes}
-                    edges={edges}
-                    defaultEdgeOptions={defaultEdgeOptions}
-                    connectionLineType="smoothstep"
-                    connectionRadius={30}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    onMoveEnd={(_, vp) => setViewports(vp)}
-                    // fitView
-                    // isValidConnection={isValidConnection}
-                    onNodeDragStop={onNodeDragStop}
-                    onSelectionChange={onSelectionChange}
-                    fitView
-                    selectionOnDrag
-                    selectionMode={SelectionMode.Partial}
-                    snapToGrid
-                    snapGrid={[10, 10]}
-                    nodesDraggable
-                    nodeDragThreshold={8}
-                    onInit={(instance) => {
-                        rfInstance.current = instance;
-                    }}
-                >
-                <Background />
-                <Controls />
-                <MiniMap />
-            </ReactFlow>
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-slate-800">
+                User Flow Steps
+              </p>
+              <button
+                type="button"
+                onClick={() => setBullets((b) => [...b, ""])}
+                className="px-3 py-2 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20"
+              >
+                + Add step
+              </button>
             </div>
+
+            {bullets.length === 0 ? (
+              <p className="text-xs text-slate-500">
+                Add 3–10 steps like “Login → Home → Create Post → Publish”.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {bullets.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className="mt-2 text-xs font-semibold text-slate-500 w-6">
+                      {idx + 1}.
+                    </div>
+
+                    <textarea
+                      value={step}
+                      onChange={(e) =>
+                        setBullets((arr) =>
+                          arr.map((x, i) => (i === idx ? e.target.value : x)),
+                        )
+                      }
+                      rows={2}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-primary/25"
+                      placeholder="Describe the step..."
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBullets((arr) => arr.filter((_, i) => i !== idx))
+                        }
+                        className="px-2 py-1 rounded-md text-xs bg-danger/10 text-danger hover:bg-danger/20"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBullets((arr) => {
+                            if (idx === 0) return arr;
+                            const copy = [...arr];
+                            [copy[idx - 1], copy[idx]] = [
+                              copy[idx],
+                              copy[idx - 1],
+                            ];
+                            return copy;
+                          })
+                        }
+                        className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        title="Move up"
+                      >
+                        ↑
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBullets((arr) => {
+                            if (idx === arr.length - 1) return arr;
+                            const copy = [...arr];
+                            [copy[idx + 1], copy[idx]] = [
+                              copy[idx],
+                              copy[idx + 1],
+                            ];
+                            return copy;
+                          })
+                        }
+                        className="px-2 py-1 rounded-md text-xs bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        title="Move down"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {flowMode !== "DIAGRAM" && (
+              <button
+                onClick={saveUserFlowText}
+                disabled={savingText}
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-60"
+              >
+                {savingText ? "Saving..." : "Save text"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {flowMode !== "TEXT" && (
+          <div style={{ height: 520 }} className="rounded-lg overflow-hidden">
+            <ReactFlow
+              nodeTypes={nodeTypes}
+              nodes={nodes}
+              edges={edges}
+              defaultEdgeOptions={defaultEdgeOptions}
+              connectionLineType="smoothstep"
+              connectionRadius={30}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onMoveEnd={(_, vp) => setViewports(vp)}
+              // fitView
+              // isValidConnection={isValidConnection}
+              onNodeDragStop={onNodeDragStop}
+              onSelectionChange={onSelectionChange}
+              fitView
+              selectionOnDrag
+              selectionMode={SelectionMode.Partial}
+              snapToGrid
+              snapGrid={[10, 10]}
+              nodesDraggable
+              nodeDragThreshold={8}
+              onInit={(instance) => {
+                rfInstance.current = instance;
+              }}
+            >
+              <Background />
+              <Controls />
+              <MiniMap />
+            </ReactFlow>
+          </div>
         )}
 
         <p className="mt-2 text-xs text-slate-500">

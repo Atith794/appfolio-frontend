@@ -7,7 +7,18 @@ import { apiFetch, API_BASE } from "@/lib/api";
 import { ImageViewerModal } from "@/components/ImageViewerModal";
 import { makeCroppedCloudinaryUrl } from "@/lib/cloudinary";
 import { redirect } from "next/navigation";
-import { Info, MoveDown, MoveLeft, MoveRight, MoveUp, Trash2, GripVertical, Eye, Edit, Pencil } from 'lucide-react'
+import {
+  Info,
+  MoveDown,
+  MoveLeft,
+  MoveRight,
+  MoveUp,
+  Trash2,
+  GripVertical,
+  Eye,
+  Edit,
+  Pencil,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -25,6 +36,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { PhoneFrame } from "./PhoneFrame";
 import { FramedPreviewModal } from "@/components/FramedPreviewModal";
+import { getFileHash } from "@/utils/getFileHash";
 
 type Screenshot = {
   _id: string;
@@ -45,7 +57,7 @@ type ScreenshotGroup = {
 export function ScreenshotsPanel({ appId }: { appId: string }) {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [uploading,setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const [error, setError] = useState("");
   const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
@@ -57,13 +69,15 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [framePreviewOpen, setFramePreviewOpen] = useState(false);
   const [frameIndex, setFrameIndex] = useState(0);
-  const [screenshotGroups, setScreenshotGroups] = useState<ScreenshotGroup[]>([]);
+  const [screenshotGroups, setScreenshotGroups] = useState<ScreenshotGroup[]>(
+    [],
+  );
 
   const limitReached = screenshotsUsed >= screenshotLimit;
 
   const sorted = useMemo(
     () => [...screenshots].sort((a, b) => a.order - b.order),
-    [screenshots]
+    [screenshots],
   );
 
   async function load() {
@@ -75,22 +89,23 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
       const data = await apiFetch(`/apps/${appId}`, {
         headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store"
+        cache: "no-store",
       });
 
       const app = (data as any).app;
       const meta = (data as any).meta;
 
       setScreenshots(((data as any).app?.screenshots || []) as Screenshot[]);
-      setScreenshotGroups(((data as any).app?.screenshotGroups || []) as ScreenshotGroup[]);
+      setScreenshotGroups(
+        ((data as any).app?.screenshotGroups || []) as ScreenshotGroup[],
+      );
 
       if (meta?.plan) setPlan(meta.plan);
       if (meta?.screenshotLimit) setScreenshotLimit(meta.screenshotLimit);
-      if (typeof meta?.screenshotsUsed === "number") setScreenshotsUsed(meta.screenshotsUsed);
+      if (typeof meta?.screenshotsUsed === "number")
+        setScreenshotsUsed(meta.screenshotsUsed);
 
       setScreenshotsUsed((app?.screenshots || []).length);
-
-
     } catch (e: any) {
       setError(e.message || "Failed to load app");
     } finally {
@@ -102,65 +117,209 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
     load();
   }, [appId]);
 
+  // Working code
+  // async function uploadFiles(files: FileList) {
+  //   setError("");
+  //   setUploading(true);
+  //   try {
+  //     const token = await getToken();
+  //     if (!token) return;
+
+  //     const fileHash = await getFileHash(files)
+
+  //     // get signature once per batch
+  //     const sig = await apiFetch("/uploads/cloudinary-signature", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type":"application/json",
+  //         Authorization: `Bearer ${token}`
+  //       },
+  //       body:JSON.stringify({
+  //         appId,
+  //         fileHash
+  //       })
+  //     });
+
+  //     for (const file of Array.from(files)) {
+  //       const form = new FormData();
+  //       form.append("file", file);
+  //       form.append("api_key", (sig as any).apiKey);
+  //       form.append("timestamp", String((sig as any).timestamp));
+  //       form.append("signature", (sig as any).signature);
+  //       form.append("folder", (sig as any).folder);
+  //       form.append("public_id", (sig as any).public_id);
+  //       form.append("overwrite", "false");
+  //       form.append("transformation", (sig as any).transformation);
+
+  //       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  //       if (!cloudName)
+  //         throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
+
+  //       const uploadRes = await axios.post(
+  //         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+  //         form,
+  //       );
+
+  //       await apiFetch(`/apps/${appId}/screenshots`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({
+  //           url: uploadRes.data.secure_url,
+  //           width: uploadRes.data.width,
+  //           height: uploadRes.data.height,
+  //         }),
+  //       });
+  //     }
+  //   } catch (err: any) {
+  //     const matches = err.message.match(/\d+/);
+  //     if (matches) {
+  //       const limit = parseInt(matches[0]);
+  //       if (limit === 6) {
+  //         alert("Please upgrade to pro to upload upto 12 screenshots");
+  //       } else {
+  //         alert("Maximum screenshot upload limit reached");
+  //       }
+  //       window.location.href = "/pricing";
+  //       return;
+  //     } else {
+  //       console.error("Screenshots upload error:", err);
+  //     }
+  //   } finally {
+  //     setUploading(false);
+  //     await load();
+  //   }
+  // }
+
   async function uploadFiles(files: FileList) {
     setError("");
     setUploading(true);
-    try{
+
+    try {
       const token = await getToken();
       if (!token) return;
 
-      // get signature once per batch
-      const sig = await apiFetch("/uploads/cloudinary-signature", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      if (!cloudName) {
+        throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
+      }
 
-      for (const file of Array.from(files)) {
+      const fileArray = Array.from(files);
+
+      /**
+       * Prevent duplicate files selected in the same upload batch.
+       */
+      const uploadedHashesInThisBatch = new Set<string>();
+
+      for (const file of fileArray) {
+        /**
+         * Important:
+         * get hash for each individual file, not the full FileList.
+         */
+        const fileHash = await getFileHash(file);
+
+        if (uploadedHashesInThisBatch.has(fileHash)) {
+          console.log("Duplicate file skipped in same batch:", file.name);
+          continue;
+        }
+
+        uploadedHashesInThisBatch.add(fileHash);
+
+        /**
+         * Get signature per file.
+         */
+        const sig: any = await apiFetch("/uploads/cloudinary-signature", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            appId,
+            fileHash,
+          }),
+        });
+
+        /**
+         * If backend says this image already exists,
+         * do not upload to Cloudinary again.
+         */
+        if (sig.shouldUpload === false) {
+          await apiFetch(`/apps/${appId}/screenshots`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              url: sig.url,
+              width: sig.width,
+              height: sig.height,
+              publicId: sig.publicId || sig.public_id,
+              fileHash,
+            }),
+          });
+
+          continue;
+        }
+
         const form = new FormData();
-        form.append("file", file);
-        form.append("api_key", (sig as any).apiKey);
-        form.append("timestamp", String((sig as any).timestamp));
-        form.append("signature", (sig as any).signature);
-        form.append("folder", (sig as any).folder);
 
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
+        form.append("file", file);
+        form.append("api_key", sig.apiKey);
+        form.append("timestamp", String(sig.timestamp));
+        form.append("signature", sig.signature);
+        form.append("folder", sig.folder);
+        form.append("public_id", sig.public_id);
+        form.append("overwrite", "false");
+
+        if (sig.transformation) {
+          form.append("transformation", sig.transformation);
+        }
 
         const uploadRes = await axios.post(
           `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          form
+          form,
         );
 
         await apiFetch(`/apps/${appId}/screenshots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             url: uploadRes.data.secure_url,
             width: uploadRes.data.width,
-            height: uploadRes.data.height
-          })
+            height: uploadRes.data.height,
+            publicId: uploadRes.data.public_id,
+            fileHash,
+          }),
         });
       }
-    }catch(err: any){
-        const matches = err.message.match(/\d+/);
-        if(matches){
-          const limit = parseInt(matches[0]);
-          if (limit === 6) {
-              alert("Please upgrade to pro to upload upto 12 screenshots");
-          } else {
-              alert("Maximum screenshot upload limit reached");
-          }
-          window.location.href = "/pricing";
-          return;
+    } catch (err: any) {
+      const matches = err.message?.match(/\d+/);
+
+      if (matches) {
+        const limit = parseInt(matches[0]);
+
+        if (limit === 6) {
+          alert("Please upgrade to pro to upload up to 12 screenshots");
+        } else {
+          alert("Maximum screenshot upload limit reached");
         }
-        else{
-          console.error("Screenshots upload error:",err);
-        }
-    }
-    finally{
+
+        window.location.href = "/pricing";
+        return;
+      }
+
+      console.error("Screenshots upload error:", err);
+      setError(
+        err?.message || "Something went wrong while uploading screenshots",
+      );
+    } finally {
       setUploading(false);
       await load();
     }
@@ -249,9 +408,9 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ screenshotIds })
+        body: JSON.stringify({ screenshotIds }),
       });
       alert("Order saved successfully!!");
       setScreenshots((data as any).screenshots || []);
@@ -272,10 +431,13 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
       const token = await getToken();
       if (!token) return;
 
-      const data = await apiFetch(`/apps/${appId}/screenshots/${screenshotId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const data = await apiFetch(
+        `/apps/${appId}/screenshots/${screenshotId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       setScreenshots((data as any).screenshots || []);
       setScreenshotsUsed(((data as any).screenshots || []).length);
@@ -331,7 +493,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
     }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 150, tolerance: 8 },
-    })
+    }),
   );
 
   function onDragEnd(event: DragEndEvent) {
@@ -353,7 +515,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
   const groupedForUI = useMemo(() => {
     if (plan !== "PRO") return null;
 
-    const groupsByKey = new Map(screenshotGroups.map(g => [g.key, g]));
+    const groupsByKey = new Map(screenshotGroups.map((g) => [g.key, g]));
     const buckets = new Map<string, Screenshot[]>();
 
     for (const shot of sorted) {
@@ -364,15 +526,15 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
     // order groups by earliest screenshot.order (keeps your existing reorder behavior)
     const keys = Array.from(buckets.keys()).sort((a, b) => {
-      const aMin = Math.min(...buckets.get(a)!.map(x => x.order));
-      const bMin = Math.min(...buckets.get(b)!.map(x => x.order));
+      const aMin = Math.min(...buckets.get(a)!.map((x) => x.order));
+      const bMin = Math.min(...buckets.get(b)!.map((x) => x.order));
       return aMin - bMin;
     });
 
     return keys.map((key) => ({
       key,
       meta: key ? groupsByKey.get(key) : undefined,
-      items: buckets.get(key)!.sort((x,y)=>x.order-y.order),
+      items: buckets.get(key)!.sort((x, y) => x.order - y.order),
     }));
   }, [plan, sorted, screenshotGroups]);
 
@@ -387,7 +549,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
   }, [sorted]);
 
   const THUMB = 48; // 12 * 4px = 48px (h-12 w-12)
-  const GAP = 8;    // gap-2 = 8px
+  const GAP = 8; // gap-2 = 8px
   const VISIBLE = 6;
 
   const stripWidth = VISIBLE * THUMB + (VISIBLE - 1) * GAP; // 6 thumbs + 5 gaps
@@ -402,64 +564,62 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
           {/* Manage screenshots */}
 
-
-
-           {plan === "FREE" ? (
-              limitReached ? (
-                // When limit reached: Upload becomes Upgrade CTA
-                <button
-                  type="button"
-                  onClick={() => (window.location.href = "/pricing")}
-                  className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
-                  title="Upgrade to Pro to upload more screenshots"
+          {plan === "FREE" ? (
+            limitReached ? (
+              // When limit reached: Upload becomes Upgrade CTA
+              <button
+                type="button"
+                onClick={() => (window.location.href = "/pricing")}
+                className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
+                title="Upgrade to Pro to upload more screenshots"
+              >
+                {uploading ? "Uploading ..." : "Upload"}
+                <span
+                  style={{
+                    fontSize: 11,
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    border: "2px solid #6366f1",
+                    marginLeft: "12px",
+                  }}
                 >
-                  {uploading ? 'Uploading ...' : 'Upload'}
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      border: "2px solid #6366f1",
-                      marginLeft: "12px"
-                    }}
-                  >
-                    PRO
-                  </span>
-                </button>
-              ) : (
-                // Normal Upload (no badge)
-                <label
-                  className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
-                  title="Upload screenshots"
-                >
-                  {uploading ? 'Uploading ...' : 'Upload'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: "none" }}
-                    onChange={(e) => e.target.files && uploadFiles(e.target.files)}
-                  />
-                </label>
-              )
+                  PRO
+                </span>
+              </button>
             ) : (
-              // PRO plan
-              !limitReached ? (
-                <label
-                  className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
-                  title="Upload screenshots"
-                >
-                  {uploading ? 'Uploading ...' : 'Upload'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: "none" }}
-                    onChange={(e) => e.target.files && uploadFiles(e.target.files)}
-                  />
-                </label>
-              ) : null
-            )}
+              // Normal Upload (no badge)
+              <label
+                className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
+                title="Upload screenshots"
+              >
+                {uploading ? "Uploading ..." : "Upload"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) =>
+                    e.target.files && uploadFiles(e.target.files)
+                  }
+                />
+              </label>
+            )
+          ) : // PRO plan
+          !limitReached ? (
+            <label
+              className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
+              title="Upload screenshots"
+            >
+              {uploading ? "Uploading ..." : "Upload"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={(e) => e.target.files && uploadFiles(e.target.files)}
+              />
+            </label>
+          ) : null}
         </div>
 
         <div className="flex items-center">
@@ -467,16 +627,20 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
             onClick={() => redirect("/dashboard/onboard")}
             className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
           >
-           Dashboard
+            Dashboard
           </button>
         </div>
       </div>
 
       {loading ? <p style={{ marginTop: 10 }}>Loading...</p> : null}
-      {error ? <p style={{ marginTop: 10, color: "crimson" }}>{error}</p> : null}
+      {error ? (
+        <p style={{ marginTop: 10, color: "crimson" }}>{error}</p>
+      ) : null}
 
       {!loading && sorted.length === 0 ? (
-        <p style={{ marginTop: 10, color: "#666" }}>No screenshots yet. Upload a few.</p>
+        <p style={{ marginTop: 10, color: "#666" }}>
+          No screenshots yet. Upload a few.
+        </p>
       ) : null}
 
       {/* Show screenshots */}
@@ -513,7 +677,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                       <div className="text-xl font-semibold text-primary font-serif">
                         {s.order}.
                       </div>
-                      
+
                       <div>
                         <button
                           title="Preview"
@@ -538,7 +702,14 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                         </button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                        width: "100%",
+                      }}
+                    >
                       <div className="flex items-center gap-2">
                         <img
                           src={s.url}
@@ -558,21 +729,31 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                         />
                       </div>
 
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <button
                           onClick={() => move(idx, -1)}
                           className="px-4 py-2 my-5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
                         >
-                          <span className="block min-[581px]:hidden"><MoveUp size={18}/></span>
-                          <span className="hidden min-[581px]:block"><MoveLeft size={18}/></span>
+                          <span className="block min-[581px]:hidden">
+                            <MoveUp size={18} />
+                          </span>
+                          <span className="hidden min-[581px]:block">
+                            <MoveLeft size={18} />
+                          </span>
                         </button>
 
                         <button
                           onClick={() => move(idx, 1)}
                           className="px-4 py-2 my-5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
                         >
-                          <span className="block min-[581px]:hidden"><MoveDown size={18}/></span>
-                          <span className="hidden min-[581px]:block"><MoveRight size={18}/></span>
+                          <span className="block min-[581px]:hidden">
+                            <MoveDown size={18} />
+                          </span>
+                          <span className="hidden min-[581px]:block">
+                            <MoveRight size={18} />
+                          </span>
                         </button>
 
                         <button
@@ -582,48 +763,59 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                           <Trash2 size={18} />
                         </button>
                       </div>
-                       {plan === "PRO" ? (
+                      {plan === "PRO" ? (
                         <div className="mt-2">
-                          <label className="text-xs text-slate-500 font-serif">Group</label>
+                          <label className="text-xs text-slate-500 font-serif">
+                            Group
+                          </label>
                           <select
                             value={s.groupKey ?? ""}
                             onChange={async (e) => {
                               const groupKey = e.target.value; // should now be "onboarding"
                               console.log("Selected groupKey:", groupKey);
-                              setScreenshots(prev =>
-                                prev.map(x => (x._id === s._id ? { ...x, groupKey } : x))
+                              setScreenshots((prev) =>
+                                prev.map((x) =>
+                                  x._id === s._id ? { ...x, groupKey } : x,
+                                ),
                               );
-                              try{
+                              try {
                                 const token = await getToken();
                                 if (!token) return;
-                                console.log("Value in select:",e.target.value);
-                                await apiFetch(`/apps/${appId}/screenshots/${s._id}`, {
-                                  method: "PATCH",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                    Authorization: `Bearer ${token}`,
+                                console.log("Value in select:", e.target.value);
+                                await apiFetch(
+                                  `/apps/${appId}/screenshots/${s._id}`,
+                                  {
+                                    method: "PATCH",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({
+                                      groupKey: e.target.value,
+                                    }),
                                   },
-                                  body: JSON.stringify({ groupKey: e.target.value }),
-                                });
+                                );
 
                                 await load();
-                              }catch(e){
+                              } catch (e) {
                                 console.error(e);
                                 // rollback if needed
                                 await load();
                               }
-                              
                             }}
                             className="mt-1 w-full px-2 py-2 rounded-lg text-sm bg-primary/10 text-primary font-mono"
                           >
-                            
                             <option value="">Ungrouped</option>
-                            { screenshotGroups.map((g) => (
-                              <option key={(g as any).key ?? (g as any)._id ?? g.title} value={g.key}>
+                            {screenshotGroups.map((g) => (
+                              <option
+                                key={
+                                  (g as any).key ?? (g as any)._id ?? g.title
+                                }
+                                value={g.key}
+                              >
                                 {g.title} — key: {(g as any).key}
                               </option>
                             ))}
-
                           </select>
                         </div>
                       ) : null}
@@ -640,7 +832,8 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
           <p className="flex items-center gap-1 text-xs font-medium text-primary/80">
             <Info size={14} />
             <span>
-              Arrange screenshots in the exact order you want for it to appear on the public appfolio.
+              Arrange screenshots in the exact order you want for it to appear
+              on the public appShelves portfolio.
             </span>
           </p>
           <button
@@ -656,7 +849,9 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
         <div className="border rounded-2xl p-4 bg-slate-50 mb-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="font-semibold text-slate-900 font-serif">Screenshot groups</div>
+              <div className="font-semibold text-slate-900 font-serif">
+                Screenshot groups
+              </div>
               <div className="text-sm text-slate-500 font-serif">
                 Create sections like Onboarding, Home, Checkout.
               </div>
@@ -667,7 +862,8 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
               onClick={async () => {
                 const title = prompt("Group title (ex: Onboarding)")?.trim();
                 if (!title) return;
-                const description = prompt("Small description (optional)")?.trim() || "";
+                const description =
+                  prompt("Small description (optional)")?.trim() || "";
 
                 await createGroupSafe(title, description);
 
@@ -680,139 +876,160 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
           </div>
 
           {screenshotGroups.length ? (
-            
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {screenshotGroups.map((g) => {
                 const groupShots = shotsByGroup.get(g.key) || [];
                 const ungrouped = shotsByGroup.get("") || [];
 
                 return (
-                <div key={g.key} className="rounded-xl border bg-white p-3">
-                  <div className="font-medium text-slate-900 font-serif">
-                    {g.title}
-                    <button
-                      className="mx-3 px-3 py-1.5 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 font-mono cursor-pointer"
-                      onClick={async () => {
-                        const title = prompt("Edit title", g.title)?.trim();
-                        if (!title) return;
-                        const description = prompt("Edit description", g.description || "")?.trim() || "";
+                  <div key={g.key} className="rounded-xl border bg-white p-3">
+                    <div className="font-medium text-slate-900 font-serif">
+                      {g.title}
+                      <button
+                        className="mx-3 px-3 py-1.5 rounded-lg text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 font-mono cursor-pointer"
+                        onClick={async () => {
+                          const title = prompt("Edit title", g.title)?.trim();
+                          if (!title) return;
+                          const description =
+                            prompt(
+                              "Edit description",
+                              g.description || "",
+                            )?.trim() || "";
 
-                        const token = await getToken();
-                        if (!token) return;
+                          const token = await getToken();
+                          if (!token) return;
 
-                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
-                          method: "PATCH",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ title, description }),
-                        });
+                          await apiFetch(
+                            `/apps/${appId}/screenshot-groups/${g.key}`,
+                            {
+                              method: "PATCH",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({ title, description }),
+                            },
+                          );
 
-                        await load();
-                      }}
-                    >
-                      <Pencil  size={12}/>
-                      {/* <Edit size={8}/> */}
-                    </button>
-                  </div>
-                  {g.description ? (
-                    <div className="text-sm text-slate-500 mt-1 font-serif">{g.description}</div>
-                  ) : null}
-                  <div className="mt-3 text-xs text-slate-500 font-mono">
-                    {groupShots.length} screenshot{groupShots.length === 1 ? "" : "s"}
-                  </div>
-
-                  {groupShots.length ? (
-                    <div
-                      className="mt-2"
-                      style={{ width: stripWidth }}
-                    >
-                      <div
-                        className="flex gap-2 overflow-x-auto pb-2"
-                        style={{
-                          scrollbarWidth: "thin",          // Firefox
-                          WebkitOverflowScrolling: "touch" // iOS smooth
+                          await load();
                         }}
                       >
-                        {groupShots.map((shot) => {
-                          const idx = sorted.findIndex((x) => x._id === shot._id);
-                          return (
-                            <img
-                              key={shot._id}
-                              src={shot.url}
-                              alt=""
-                              onClick={() => {
-                                setViewerIndex(idx);
-                                setViewerOpen(true);
-                              }}
-                              className="
+                        <Pencil size={12} />
+                        {/* <Edit size={8}/> */}
+                      </button>
+                    </div>
+                    {g.description ? (
+                      <div className="text-sm text-slate-500 mt-1 font-serif">
+                        {g.description}
+                      </div>
+                    ) : null}
+                    <div className="mt-3 text-xs text-slate-500 font-mono">
+                      {groupShots.length} screenshot
+                      {groupShots.length === 1 ? "" : "s"}
+                    </div>
+
+                    {groupShots.length ? (
+                      <div className="mt-2" style={{ width: stripWidth }}>
+                        <div
+                          className="flex gap-2 overflow-x-auto pb-2"
+                          style={{
+                            scrollbarWidth: "thin", // Firefox
+                            WebkitOverflowScrolling: "touch", // iOS smooth
+                          }}
+                        >
+                          {groupShots.map((shot) => {
+                            const idx = sorted.findIndex(
+                              (x) => x._id === shot._id,
+                            );
+                            return (
+                              <img
+                                key={shot._id}
+                                src={shot.url}
+                                alt=""
+                                onClick={() => {
+                                  setViewerIndex(idx);
+                                  setViewerOpen(true);
+                                }}
+                                className="
                                 h-12 w-12 flex-none rounded-lg
                                 border border-slate-200 object-cover cursor-pointer
                                 transition-transform duration-150
                                 hover:scale-[1.03]
                                 hover:border-primary/60 hover:ring-2 hover:ring-primary/20
                               "
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {/* Optional: tiny hint only when scroll exists */}
-                      {groupShots.length > 6 ? (
-                        <div className="mt-1 text-[11px] text-slate-400 font-mono">
-                          Drag/scroll to view more →
+                              />
+                            );
+                          })}
                         </div>
-                      ) : null}
+
+                        {/* Optional: tiny hint only when scroll exists */}
+                        {groupShots.length > 6 ? (
+                          <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                            Drag/scroll to view more →
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="mt-2 text-xs text-slate-400 font-mono">
+                        No screenshots assigned yet.
+                      </div>
+                    )}
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        className="px-3 py-1.5 rounded-lg text-xs bg-danger/10 text-danger hover:bg-danger/20 font-mono"
+                        onClick={async () => {
+                          const ok = confirm(
+                            `Delete group "${g.title}"? Screenshots will become ungrouped.`,
+                          );
+                          if (!ok) return;
+
+                          const token = await getToken();
+                          if (!token) return;
+
+                          await apiFetch(
+                            `/apps/${appId}/screenshot-groups/${g.key}`,
+                            {
+                              method: "DELETE",
+                              headers: { Authorization: `Bearer ${token}` },
+                            },
+                          );
+
+                          await load();
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
-
-                  ) : (
-                    <div className="mt-2 text-xs text-slate-400 font-mono">No screenshots assigned yet.</div>
-                  )}
-                  <div className="mt-3 flex gap-2">
-
-                    <button
-                      className="px-3 py-1.5 rounded-lg text-xs bg-danger/10 text-danger hover:bg-danger/20 font-mono"
-                      onClick={async () => {
-                        const ok = confirm(`Delete group "${g.title}"? Screenshots will become ungrouped.`);
-                        if (!ok) return;
-
-                        const token = await getToken();
-                        if (!token) return;
-
-                        await apiFetch(`/apps/${appId}/screenshot-groups/${g.key}`, {
-                          method: "DELETE",
-                          headers: { Authorization: `Bearer ${token}` },
-                        });
-
-                        await load();
-                      }}
-                    >
-                      Delete
-                    </button>
                   </div>
-                </div>
-              )})}
+                );
+              })}
             </div>
           ) : (
-            <div className="mt-3 text-sm text-slate-500 font-mono">No groups yet.</div>
+            <div className="mt-3 text-sm text-slate-500 font-mono">
+              No groups yet.
+            </div>
           )}
         </div>
       ) : (
         <div className="border rounded-2xl p-4 bg-slate-50 mb-4 flex items-center justify-between">
           <div>
             <div className="font-semibold">Screenshot groups</div>
-            <div className="text-sm text-slate-500 font-serif">Group screenshots into sections.</div>
+            <div className="text-sm text-slate-500 font-serif">
+              Group screenshots into sections.
+            </div>
           </div>
           <button
             className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-primary hover:bg-slate-200 hover:cursor-pointer"
             onClick={() => (window.location.href = "/pricing")}
           >
-            Unlock <span className="ml-2 text-[11px] px-2 py-[2px] rounded-full border hover:cursor-pointer">PRO</span>
+            Unlock{" "}
+            <span className="ml-2 text-[11px] px-2 py-[2px] rounded-full border hover:cursor-pointer">
+              PRO
+            </span>
           </button>
         </div>
       )}
-    
+
       <ImageViewerModal
         open={viewerOpen}
         images={sorted.map((x) => x.url)}
@@ -827,18 +1044,21 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
           const newUrl = makeCroppedCloudinaryUrl(target.url, cropPixels);
 
-          const data = await apiFetch(`/apps/${appId}/screenshots/${target._id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
+          const data = await apiFetch(
+            `/apps/${appId}/screenshots/${target._id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                url: newUrl,
+                width: Math.round(cropPixels.width),
+                height: Math.round(cropPixels.height),
+              }),
             },
-            body: JSON.stringify({
-              url: newUrl,
-              width: Math.round(cropPixels.width),
-              height: Math.round(cropPixels.height)
-            })
-          });
+          );
 
           setScreenshots((data as any).screenshots || []);
         }}
@@ -858,18 +1078,21 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
 
           const newUrl = makeCroppedCloudinaryUrl(target.url, cropPixels);
 
-          const data = await apiFetch(`/apps/${appId}/screenshots/${target._id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+          const data = await apiFetch(
+            `/apps/${appId}/screenshots/${target._id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                url: newUrl,
+                width: Math.round(cropPixels.width),
+                height: Math.round(cropPixels.height),
+              }),
             },
-            body: JSON.stringify({
-              url: newUrl,
-              width: Math.round(cropPixels.width),
-              height: Math.round(cropPixels.height),
-            }),
-          });
+          );
 
           setScreenshots((data as any).screenshots || []);
         }}

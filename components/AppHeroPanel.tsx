@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { Info } from "lucide-react";
 import { ImageViewerModal } from "./ImageViewerModal";
 import { redirect } from "next/navigation";
+import { getFileHash } from "@/utils/getFileHash";
 
 type AppHero = {
   name: string;
@@ -73,7 +74,9 @@ export function AppHeroPanel({ appId }: { appId: string }) {
   function togglePlatform(p: AppHero["platform"][number]) {
     setHero((prev) => {
       const exists = prev.platform.includes(p);
-      const next = exists ? prev.platform.filter((x) => x !== p) : [...prev.platform, p];
+      const next = exists
+        ? prev.platform.filter((x) => x !== p)
+        : [...prev.platform, p];
 
       // Must have at least 1 platform
       if (next.length === 0) return prev;
@@ -88,11 +91,19 @@ export function AppHeroPanel({ appId }: { appId: string }) {
     try {
       const token = await getToken();
       if (!token) return;
+      const fileHash = await getFileHash(file);
 
       // signature (same as screenshots)
       const sig = await apiFetch("/uploads/cloudinary-signature", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appId,
+          fileHash,
+        }),
       });
 
       const form = new FormData();
@@ -101,13 +112,17 @@ export function AppHeroPanel({ appId }: { appId: string }) {
       form.append("timestamp", String((sig as any).timestamp));
       form.append("signature", (sig as any).signature);
       form.append("folder", (sig as any).folder);
+      form.append("public_id", (sig as any).public_id);
+      form.append("overwrite", "false");
+      form.append("transformation", (sig as any).transformation);
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
+      if (!cloudName)
+        throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME missing");
 
       const uploadRes = await axios.post(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        form
+        form,
       );
 
       setHero((p) => ({ ...p, appIconUrl: uploadRes.data.secure_url }));
@@ -150,7 +165,6 @@ export function AppHeroPanel({ appId }: { appId: string }) {
   return (
     <section style={{ marginTop: 16 }}>
       <div className="grid gap-4 md:grid-cols-[140px_1fr] items-start">
-       
         {/* Icon */}
         <div className="flex flex-col gap-2">
           <div className="w-[120px] h-[120px] rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden bg-white flex items-center justify-center">
@@ -198,18 +212,26 @@ export function AppHeroPanel({ appId }: { appId: string }) {
         <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 hover:border-primary/50 hover:bg-primary/5 transition-all">
           <div className="grid gap-4">
             <div className="grid gap-1">
-              <label className="text-sm font-semibold text-slate-700">App name</label>
+              <label className="text-sm font-semibold text-slate-700">
+                App name
+              </label>
               <input
                 value={hero.name}
-                onChange={(e) => setHero((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setHero((p) => ({ ...p, name: e.target.value }))
+                }
                 placeholder="e.g., Peti — Social app for pets"
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
               />
-              <p className="text-xs text-slate-400">{hero.name.trim().length}/80</p>
+              <p className="text-xs text-slate-400">
+                {hero.name.trim().length}/80
+              </p>
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-slate-700">Platforms</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Platforms
+              </label>
 
               <div className="flex flex-wrap gap-2">
                 {PLATFORMS.map((p) => {
@@ -255,8 +277,14 @@ export function AppHeroPanel({ appId }: { appId: string }) {
               </button>
             </div>
 
-            {loading ? <p className="text-sm text-slate-500">Loading...</p> : null}
-            {error ? <p className="text-sm" style={{ color: "crimson" }}>{error}</p> : null}
+            {loading ? (
+              <p className="text-sm text-slate-500">Loading...</p>
+            ) : null}
+            {error ? (
+              <p className="text-sm" style={{ color: "crimson" }}>
+                {error}
+              </p>
+            ) : null}
           </div>
         </div>
         <ImageViewerModal
@@ -264,11 +292,9 @@ export function AppHeroPanel({ appId }: { appId: string }) {
           images={[hero?.appIconUrl]}
           startIndex={0}
           onClose={() => setViewerOpen(false)}
-          onSaveCrop={
-            async () => {
-              console.log("Image")
-            }
-          }
+          onSaveCrop={async () => {
+            console.log("Image");
+          }}
         />
       </div>
     </section>
