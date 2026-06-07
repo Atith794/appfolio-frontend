@@ -4,12 +4,21 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { AppWindow, Link as LinkIcon, Hash, PlusCircle, Copy, Check, Info, Search } from 'lucide-react';
-import { redirect } from "next/navigation";
+import {
+  AppWindow,
+  Link as LinkIcon,
+  Hash,
+  PlusCircle,
+  Copy,
+  Check,
+  Info,
+  Search,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { DescriptionWithMore } from "./Components/DescriptionWithMore";
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_LINK || 'http://localhost:3000';
+  process.env.NEXT_PUBLIC_API_LINK || "http://localhost:3000";
 
 function CopyLink({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
@@ -58,8 +67,11 @@ export default function AppsPage() {
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
   const [query, setQuery] = useState("");
+  const router = useRouter();
 
-  const filteredApps = apps.filter((a) => {
+  const safeApps = Array.isArray(apps) ? apps : [];
+
+  const filteredApps = safeApps.filter((a) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
 
@@ -78,10 +90,22 @@ export default function AppsPage() {
 
         const data = await apiFetch("/apps", {
           headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store"
+          cache: "no-store",
         });
-        setApps((data as any).apps || []);
-        setUsername((data as any).user.username);
+        // setApps((data as any).apps || []);
+        // setUsername((data as any).user.username);
+        const response = data as any;
+
+        const appsList = Array.isArray(response?.apps)
+          ? response.apps
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response)
+              ? response
+              : [];
+
+        setApps(appsList);
+        setUsername(response?.user?.username || "");
       } catch (e: any) {
         setError(e.message || "Failed to load apps");
       } finally {
@@ -92,8 +116,17 @@ export default function AppsPage() {
 
   return (
     <main style={{ padding: 12 }}>
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <h2 className="text-black text-xl font-black tracking-tight font-serif">Dashboard</h2>    
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <h2 className="text-black text-xl font-black tracking-tight font-serif">
+          Dashboard
+        </h2>
         <p className="text-sm text-slate-500 mt-1 font-serif">
           Manage your app-portfolios
         </p>
@@ -113,70 +146,88 @@ export default function AppsPage() {
         </div>
 
         <p className="mt-2 text-xs text-slate-500 font-mono">
-          Showing {filteredApps.length} of {apps.length}
+          Showing {filteredApps.length} of {safeApps.length}
         </p>
       </div>
 
       {loading ? <p style={{ marginTop: 12 }}>Loading...</p> : null}
-      {error ? <p style={{ marginTop: 12, color: "crimson" }}>{error}</p> : null}
+      {error ? (
+        <p style={{ marginTop: 12, color: "crimson" }}>{error}</p>
+      ) : null}
 
       <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
         {filteredApps.map((a) => (
-           <div key={a._id} className='group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-[12px] md:p-[24px] lg:p-[24px] md:flex lg:flex items-center hover:border-primary/50 hover:bg-primary/5 transition-all'>
-             <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-                
-                <div className="flex items-center gap-2">
-                  <AppWindow className="w-4 h-4 text-primary" />
-                  <h3 className="text-lg font-semibold text-slate-900 font-serif">
-                    {a.name}
-                  </h3>
-                  
-                </div>
-                
-                {a.shortDescription && (
-                  <div className="flex items-start gap-2 text-sm text-slate-600 font-serif">
-                    {/* <FileText className="w-4 h-4 mt-0.5 text-slate-400" /> */}
-                    <span>{a.shortDescription && <DescriptionWithMore text={a.shortDescription} limit={90} />}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                  <Hash className="w-3.5 h-3.5" />
-                  <span>{a.slug}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                  <LinkIcon className="w-3.5 h-3.5 text-slate-500" />
-                  <a
-                    href={`${API_BASE}/u/${username}/${a.slug}`}
-                    target="_blank"
-                    className="text-primary hover:underline break-all focus:outline-none"
-                    aria-describedby={`visit-url-${a._id}`}
-                  >
-                    {API_BASE}/u/{username}/{a.slug}
-                  </a>
-                  <CopyLink url={`${API_BASE}/u/${username}/${a.slug}`} />
-                  </div>
+          <div
+            key={a._id}
+            className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-[12px] md:p-[24px] lg:p-[24px] md:flex lg:flex items-center hover:border-primary/50 hover:bg-primary/5 transition-all"
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                width: "100%",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <AppWindow className="w-4 h-4 text-primary" />
+                <h3 className="text-lg font-semibold text-slate-900 font-serif">
+                  {a.name}
+                </h3>
               </div>
-             <div>
-               <button 
+
+              {a.shortDescription && (
+                <div className="flex items-start gap-2 text-sm text-slate-600 font-serif">
+                  {/* <FileText className="w-4 h-4 mt-0.5 text-slate-400" /> */}
+                  <span>
+                    {a.shortDescription && (
+                      <DescriptionWithMore
+                        text={a.shortDescription}
+                        limit={90}
+                      />
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                <Hash className="w-3.5 h-3.5" />
+                <span>{a.slug}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                <LinkIcon className="w-3.5 h-3.5 text-slate-500" />
+                <a
+                  href={`${API_BASE}/u/${username}/${a.slug}`}
+                  target="_blank"
+                  className="text-primary hover:underline break-all focus:outline-none"
+                  aria-describedby={`visit-url-${a._id}`}
+                >
+                  {API_BASE}/u/{username}/{a.slug}
+                </a>
+                <CopyLink url={`${API_BASE}/u/${username}/${a.slug}`} />
+              </div>
+            </div>
+            <div>
+              <button
                 className="px-4 py-2 my-5 rounded-lg text-sm font-medium bg-primary/10 text-primary/90 hover:bg-primary/20 cursor-pointer"
                 onClick={() => {
-                  return redirect(`/dashboard/apps/${a._id}`);
+                  router.push(`/dashboard/apps/${a._id}`);
                 }}
-               >
+              >
                 Manage
-               </button>
-             </div>
-           </div>
+              </button>
+            </div>
+          </div>
         ))}
 
-        {!loading && apps.length === 0 ? (
+        {!loading && safeApps.length === 0 ? (
           <div style={{ marginTop: 8, color: "#666" }}>
             No apps yet. Create your first one.
           </div>
         ) : !loading && filteredApps.length === 0 ? (
           <div className="mt-3 text-sm text-slate-500 font-serif">
-            No results for <span className="font-mono text-slate-700">"{query}"</span>.
+            No results for{" "}
+            <span className="font-mono text-slate-700">"{query}"</span>.
           </div>
         ) : null}
         {/* Add new app */}
@@ -188,8 +239,12 @@ export default function AppsPage() {
                 <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
               </div>
               <div className="text-left">
-                <p className="text-base font-bold text-primary dark:text-white font-serif">Add new app</p>
-                <p className="text-sm sm:text-sm text-slate-500 dark:text-slate-400 font-serif">Create an App-portfolio</p>
+                <p className="text-base font-bold text-primary dark:text-white font-serif">
+                  Add new app
+                </p>
+                <p className="text-sm sm:text-sm text-slate-500 dark:text-slate-400 font-serif">
+                  Create an App-portfolio
+                </p>
               </div>
             </div>
           </Link>
