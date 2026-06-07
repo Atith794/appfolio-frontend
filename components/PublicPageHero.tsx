@@ -310,7 +310,7 @@ export default function AppHeroPanel({ appId }: { appId: string }) {
         </div>
       </div>
 
-      <ImageViewerModal
+      {hero?.appIconUrl ? (<ImageViewerModal
         open={viewerOpen}
         images={[hero?.appIconUrl].filter(Boolean)}
         startIndex={0}
@@ -318,7 +318,7 @@ export default function AppHeroPanel({ appId }: { appId: string }) {
         onSaveCrop={async () => {
           // later: integrate cropping if needed
         }}
-      />
+      />) : null}
     </section>
   );
 }

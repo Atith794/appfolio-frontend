@@ -21,6 +21,7 @@ import ReactFlow, {
   getViewportForBounds,
   useReactFlow,
   ReactFlowInstance,
+  ConnectionLineType
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useAuth } from "@clerk/nextjs";
@@ -760,7 +761,7 @@ export function ArchitectureDiagramPanel({ appId }: { appId: string }) {
             nodes={nodes}
             edges={edges}
             defaultEdgeOptions={defaultEdgeOptions}
-            connectionLineType="smoothstep"
+            connectionLineType={ConnectionLineType.SmoothStep}
             connectionRadius={30}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}

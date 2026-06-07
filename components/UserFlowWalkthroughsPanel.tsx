@@ -5,11 +5,41 @@ import { useAuth } from "@clerk/nextjs";
 import { apiFetch } from "@/lib/api";
 import { TECH_CATALOG, TECH_BY_ID } from "@/lib/techCatalog";
 import {
-  Lock, User, FileEdit, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCcw,
-  Home, Search, Package, FileText, Upload, Download, Folder, Receipt,
-  MessageCircle, Phone, Bell, MapPin, CreditCard, ShoppingCart, Cloud, Image,
-  Brain, Settings, Puzzle, Link, Shield, BarChart3, FlaskConical, Rocket, Plus, Trash2,
-  Database
+  Lock,
+  User,
+  FileEdit,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  RefreshCcw,
+  Home,
+  Search,
+  Package,
+  FileText,
+  Upload,
+  Download,
+  Folder,
+  Receipt,
+  MessageCircle,
+  Phone,
+  Bell,
+  MapPin,
+  CreditCard,
+  ShoppingCart,
+  Cloud,
+  Image,
+  Brain,
+  Settings,
+  Puzzle,
+  Link,
+  Shield,
+  BarChart3,
+  FlaskConical,
+  Rocket,
+  Plus,
+  Trash2,
+  Database,
 } from "lucide-react";
 
 type StepKind = "NODE" | "ARROW";
@@ -84,7 +114,7 @@ const ICON_PRESETS = [
   { key: "barChart3", Icon: BarChart3 },
   { key: "flaskConical", Icon: FlaskConical },
   { key: "rocket", Icon: Rocket },
-  { key: "database", Icon: Database}
+  { key: "database", Icon: Database },
 ];
 
 const COLORS = ["blue", "green", "purple", "orange", "pink", "cyan", "yellow"];
@@ -108,31 +138,31 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
       });
 
       const wf = (res as any).app?.userFlowWalkthroughs;
-    if (wf) {
-    const normalized = {
-    ...wf,
-    flows: (wf.flows || []).map((flow: any, fi: number) => ({
-      id: flow.id || crypto.randomUUID(),
-      title: flow.title || "",
-      emoji: flow.emoji || "📌",
-      order: flow.order ?? fi,
-      steps: (flow.steps || []).map((step: any, si: number) => ({
-        id: step.id || crypto.randomUUID(),
-        kind: step.kind,
-        order: step.order ?? si,
-        label: step.label,
-        desc: step.desc,
-        iconType: step.iconType || "EMOJI",
-        icon: step.icon,
-        iconRef: step.iconRef,
-        text: step.text,
-        color: step.color || "blue",
-      })),
-    })),
-    };
+      if (wf) {
+        const normalized = {
+          ...wf,
+          flows: (wf.flows || []).map((flow: any, fi: number) => ({
+            id: flow.id || crypto.randomUUID(),
+            title: flow.title || "",
+            emoji: flow.emoji || "📌",
+            order: flow.order ?? fi,
+            steps: (flow.steps || []).map((step: any, si: number) => ({
+              id: step.id || crypto.randomUUID(),
+              kind: step.kind,
+              order: step.order ?? si,
+              label: step.label,
+              desc: step.desc,
+              iconType: step.iconType || "EMOJI",
+              icon: step.icon,
+              iconRef: step.iconRef,
+              text: step.text,
+              color: step.color || "blue",
+            })),
+          })),
+        };
 
-    setData(normalized);
-    }
+        setData(normalized);
+      }
       setLoading(false);
     }
 
@@ -140,7 +170,7 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
   }, [appId]);
 
   function addFlow() {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       flows: [
         ...prev.flows,
@@ -156,43 +186,69 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
   }
 
   function deleteFlow(index: number) {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       flows: prev.flows.filter((_, i) => i !== index),
     }));
     setSelectedFlowIndex(0);
   }
 
+  // function addStep(kind: StepKind) {
+  //   setData(prev => {
+  //     const flows = prev.flows.map((f, i) =>
+  //       i === selectedFlowIndex
+  //         ? {
+  //             ...f,
+  //             steps: [
+  //               ...f.steps,
+  //               {
+  //                 id: crypto.randomUUID(),
+  //                 kind,
+  //                 order: f.steps.length,
+  //                 iconType: "EMOJI",
+  //                 color: "blue",
+  //               },
+  //             ],
+  //           }
+  //         : f
+  //     );
+  //     return { ...prev, flows };
+  //   });
+  // }
+
   function addStep(kind: StepKind) {
-    setData(prev => {
-      const flows = prev.flows.map((f, i) =>
-        i === selectedFlowIndex
-          ? {
-              ...f,
-              steps: [
-                ...f.steps,
-                {
-                  id: crypto.randomUUID(),
-                  kind,
-                  order: f.steps.length,
-                  iconType: "EMOJI",
-                  color: "blue",
-                },
-              ],
-            }
-          : f
-      );
-      return { ...prev, flows };
+    setData((prev): Walkthroughs => {
+      const flows: Flow[] = prev.flows.map((f, i) => {
+        if (i !== selectedFlowIndex) return f;
+
+        const newStep: FlowStep = {
+          id: crypto.randomUUID(),
+          kind,
+          order: f.steps.length,
+          iconType: "EMOJI",
+          color: "blue",
+        };
+
+        return {
+          ...f,
+          steps: [...f.steps, newStep],
+        };
+      });
+
+      return {
+        ...prev,
+        flows,
+      };
     });
   }
 
   function deleteStep(stepId: string) {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       flows: prev.flows.map((f, i) =>
         i === selectedFlowIndex
-          ? { ...f, steps: f.steps.filter(s => s.id !== stepId) }
-          : f
+          ? { ...f, steps: f.steps.filter((s) => s.id !== stepId) }
+          : f,
       ),
     }));
   }
@@ -214,8 +270,8 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
       setSaving(false);
       alert("Saved");
     } catch (error) {
-      console.error("Error:",error);
-    } finally{
+      console.error("Error:", error);
+    } finally {
       setSaving(false);
     }
   }
@@ -284,7 +340,6 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
   return (
     <section style={{ marginTop: 16 }}>
       <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 hover:border-primary/50 hover:bg-primary/5 transition-all">
-
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
@@ -334,7 +389,10 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
             onClick={addFlow}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
           >
-            <span className="px-0.5 py-1"><Plus size={18}/> </span>Add Flow
+            <span className="px-0.5 py-1">
+              <Plus size={18} />{" "}
+            </span>
+            Add Flow
           </button>
         </div>
 
@@ -344,10 +402,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
             <input
               value={selectedFlow.title}
               onChange={(e) => {
-                setData(prev => ({
+                setData((prev) => ({
                   ...prev,
                   flows: prev.flows.map((f, i) =>
-                    i === selectedFlowIndex ? { ...f, title: e.target.value } : f
+                    i === selectedFlowIndex
+                      ? { ...f, title: e.target.value }
+                      : f,
                   ),
                 }));
               }}
@@ -359,20 +419,26 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                 onClick={() => addStep("NODE")}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
               >
-                <span className="px-0.5 py-1"><Plus size={18}/> </span>Add Node
+                <span className="px-0.5 py-1">
+                  <Plus size={18} />{" "}
+                </span>
+                Add Node
               </button>
               <button
                 onClick={() => addStep("ARROW")}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
               >
-                <span className="px-0.5 py-1"><Plus size={18}/> </span>Add Arrow
+                <span className="px-0.5 py-1">
+                  <Plus size={18} />{" "}
+                </span>
+                Add Arrow
               </button>
             </div>
 
             {selectedFlow.steps.map((step) => {
               const search = searchMap[step.id] || "";
-              const filteredTech = TECH_CATALOG.filter(t =>
-                t.name.toLowerCase().includes(search.toLowerCase())
+              const filteredTech = TECH_CATALOG.filter((t) =>
+                t.name.toLowerCase().includes(search.toLowerCase()),
               );
 
               return (
@@ -387,9 +453,7 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                     <Trash2 size={16} />
                   </button>
 
-                  <div 
-                    className="text-xs font-semibold text-slate-700 font-mono"
-                  >
+                  <div className="text-xs font-semibold text-slate-700 font-mono">
                     {step.kind}
                   </div>
 
@@ -399,19 +463,19 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                         placeholder="Label"
                         value={step.label || ""}
                         onChange={(e) =>
-                          setData(prev => ({
+                          setData((prev) => ({
                             ...prev,
                             flows: prev.flows.map((f, i) =>
                               i === selectedFlowIndex
                                 ? {
                                     ...f,
-                                    steps: f.steps.map(s =>
+                                    steps: f.steps.map((s) =>
                                       s.id === step.id
                                         ? { ...s, label: e.target.value }
-                                        : s
+                                        : s,
                                     ),
                                   }
-                                : f
+                                : f,
                             ),
                           }))
                         }
@@ -429,10 +493,16 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                   ? {
                                       ...f,
                                       steps: f.steps.map((s) =>
-                                        s.id === step.id ? { ...s, iconType: "EMOJI", iconRef: undefined } : s
+                                        s.id === step.id
+                                          ? {
+                                              ...s,
+                                              iconType: "EMOJI",
+                                              iconRef: undefined,
+                                            }
+                                          : s,
                                       ),
                                     }
-                                  : f
+                                  : f,
                               ),
                             }));
                           }}
@@ -450,10 +520,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                   ? {
                                       ...f,
                                       steps: f.steps.map((s) =>
-                                        s.id === step.id ? { ...s, iconType: "TECH", icon: "" } : s
+                                        s.id === step.id
+                                          ? { ...s, iconType: "TECH", icon: "" }
+                                          : s,
                                       ),
                                     }
-                                  : f
+                                  : f,
                               ),
                             }));
                           }}
@@ -461,7 +533,7 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                           Tech
                         </Chip>
                       </div>
-                       {step.iconType === "TECH" && (
+                      {step.iconType === "TECH" && (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-sm font-semibold text-slate-800 font-serif">
@@ -470,8 +542,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
 
                             {step.iconRef?.id ? (
                               <SelectedPill>
-                                <span className="text-slate-700">Selected:</span>
-                                <span className="font-semibold text-primary">{step.iconRef.name}</span>
+                                <span className="text-slate-700">
+                                  Selected:
+                                </span>
+                                <span className="font-semibold text-primary">
+                                  {step.iconRef.name}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -482,10 +558,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                           ? {
                                               ...f,
                                               steps: f.steps.map((s) =>
-                                                s.id === step.id ? { ...s, iconRef: undefined } : s
+                                                s.id === step.id
+                                                  ? { ...s, iconRef: undefined }
+                                                  : s,
                                               ),
                                             }
-                                          : f
+                                          : f,
                                       ),
                                     }));
                                   }}
@@ -496,7 +574,9 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                 </button>
                               </SelectedPill>
                             ) : (
-                              <div className="text-xs text-slate-500">No tech selected</div>
+                              <div className="text-xs text-slate-500">
+                                No tech selected
+                              </div>
                             )}
                           </div>
 
@@ -535,19 +615,23 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                                         category: tech.category,
                                                       },
                                                     }
-                                                  : s
+                                                  : s,
                                               ),
                                             }
-                                          : f
+                                          : f,
                                       ),
                                     }));
                                   }}
                                   title={tech.category}
                                 >
                                   {tech.iconClass ? (
-                                    <i className={`${tech.iconClass} colored text-base`} />
+                                    <i
+                                      className={`${tech.iconClass} colored text-base`}
+                                    />
                                   ) : null}
-                                  <span className="whitespace-nowrap">{tech.name}</span>
+                                  <span className="whitespace-nowrap">
+                                    {tech.name}
+                                  </span>
                                 </Chip>
                               );
                             })}
@@ -555,7 +639,6 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                         </div>
                       )}
 
-                     
                       {step.iconType === "EMOJI" && (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -565,7 +648,9 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
 
                             {step.icon?.trim() ? (
                               <SelectedPill>
-                                <span className="text-slate-700">Selected:</span>
+                                <span className="text-slate-700">
+                                  Selected:
+                                </span>
                                 <span className="text-base">{step.icon}</span>
                                 <button
                                   type="button"
@@ -577,10 +662,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                           ? {
                                               ...f,
                                               steps: f.steps.map((s) =>
-                                                s.id === step.id ? { ...s, icon: "" } : s
+                                                s.id === step.id
+                                                  ? { ...s, icon: "" }
+                                                  : s,
                                               ),
                                             }
-                                          : f
+                                          : f,
                                       ),
                                     }));
                                   }}
@@ -591,7 +678,9 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                 </button>
                               </SelectedPill>
                             ) : (
-                              <div className="text-xs text-slate-500">No emoji selected</div>
+                              <div className="text-xs text-slate-500">
+                                No emoji selected
+                              </div>
                             )}
                           </div>
 
@@ -607,10 +696,12 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                                       ? {
                                           ...f,
                                           steps: f.steps.map((s) =>
-                                            s.id === step.id ? { ...s, icon: key } : s
+                                            s.id === step.id
+                                              ? { ...s, icon: key }
+                                              : s,
                                           ),
                                         }
-                                      : f
+                                      : f,
                                   ),
                                 }))
                               }
@@ -624,11 +715,10 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                     </>
                   )}
                   {step.iconRef?.id && (
-                    <div 
+                    <div
                       // className="text-xs text-slate-700"
                       className="text-xs text-slate-500 font-serif"
-                    >
-                    </div>
+                    ></div>
                   )}
 
                   {step.kind === "ARROW" && (
@@ -636,32 +726,30 @@ export function UserFlowWalkthroughsPanel({ appId }: { appId: string }) {
                       placeholder="Arrow text"
                       value={step.text || ""}
                       onChange={(e) =>
-                        setData(prev => ({
+                        setData((prev) => ({
                           ...prev,
                           flows: prev.flows.map((f, i) =>
                             i === selectedFlowIndex
                               ? {
                                   ...f,
-                                  steps: f.steps.map(s =>
+                                  steps: f.steps.map((s) =>
                                     s.id === step.id
                                       ? { ...s, text: e.target.value }
-                                      : s
+                                      : s,
                                   ),
                                 }
-                              : f
+                              : f,
                           ),
                         }))
                       }
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                     />
                   )}
-                  
                 </div>
               );
             })}
           </div>
         )}
-        
       </div>
     </section>
   );

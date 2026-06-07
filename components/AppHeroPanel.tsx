@@ -12,7 +12,7 @@ import { getFileHash } from "@/utils/getFileHash";
 type AppHero = {
   name: string;
   platform: ("ANDROID" | "IOS" | "WINDOWS")[];
-  appIconUrl?: string;
+  appIconUrl: string;
 };
 
 const PLATFORMS: { key: AppHero["platform"][number]; label: string }[] = [
@@ -287,15 +287,15 @@ export function AppHeroPanel({ appId }: { appId: string }) {
             ) : null}
           </div>
         </div>
-        <ImageViewerModal
+        {hero?.appIconUrl ? (<ImageViewerModal
           open={viewerOpen}
           images={[hero?.appIconUrl]}
           startIndex={0}
           onClose={() => setViewerOpen(false)}
           onSaveCrop={async () => {
-            console.log("Image");
+            // console.log("Image");
           }}
-        />
+        />) : null}
       </div>
     </section>
   );

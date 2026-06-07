@@ -8,6 +8,7 @@ import {
   MessageCircle, Phone, Bell, MapPin, CreditCard, ShoppingCart, Cloud, Image,
   Brain, Settings, Puzzle, Link, Shield, BarChart3, FlaskConical, Rocket,GitBranch, Database
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 type StepKind = "NODE" | "ARROW";
 type IconType = "EMOJI" | "TECH" | "IMAGE";
 
@@ -64,7 +65,43 @@ function stableKey(prefix: string, fallbackIndex: number, id?: string) {
   return id ? `${prefix}-${id}` : `${prefix}-idx-${fallbackIndex}`;
 }
 
-const iconMap = {
+// const iconMap = {
+//   lock: Lock,
+//   user: User,
+//   fileEdit: FileEdit,
+//   checkCircle: CheckCircle,
+//   xCircle: XCircle,
+//   alertTriangle: AlertTriangle,
+//   clock: Clock,
+//   refreshCcw: RefreshCcw,
+//   home: Home,
+//   search: Search,
+//   package: Package,
+//   fileText: FileText,
+//   upload: Upload,
+//   download: Download,
+//   folder: Folder,
+//   receipt: Receipt,
+//   messageCircle: MessageCircle,
+//   phone: Phone,
+//   bell: Bell,
+//   mapPin: MapPin,
+//   creditCard: CreditCard,
+//   shoppingCart: ShoppingCart,
+//   cloud: Cloud,
+//   image: Image,
+//   brain: Brain,
+//   settings: Settings,
+//   puzzle: Puzzle,
+//   link: Link,
+//   shield: Shield,
+//   barChart3: BarChart3,
+//   flaskConical: FlaskConical,
+//   rocket: Rocket,
+//   database: Database
+// };
+
+const iconMap: Record<string, LucideIcon> = {
   lock: Lock,
   user: User,
   fileEdit: FileEdit,
@@ -97,7 +134,8 @@ const iconMap = {
   barChart3: BarChart3,
   flaskConical: FlaskConical,
   rocket: Rocket,
-  database: Database
+  gitBranch: GitBranch,
+  database: Database,
 };
 
 export default function PublicUserFlowWalkthroughs({
@@ -225,7 +263,8 @@ export default function PublicUserFlowWalkthroughs({
                 // }
 
                 if (iconType === "EMOJI" && step !== undefined) {
-                  const Icon = iconMap[step?.icon] || MapPin;
+                  const iconKey = step.icon;
+                  const Icon = iconKey ? iconMap[iconKey] || MapPin : MapPin;
 
                   iconEl = (
                     <div className="rounded-lg bg-slate-100 text-slate-700">

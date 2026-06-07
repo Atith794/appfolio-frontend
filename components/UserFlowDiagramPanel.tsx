@@ -21,6 +21,7 @@ import ReactFlow, {
   getViewportForBounds,
   useReactFlow,
   ReactFlowInstance,
+  ConnectionLineType
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useAuth } from "@clerk/nextjs";
@@ -179,14 +180,6 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
     } finally {
       setSavingText(false);
     }
-  }
-
-  function getTechByKey(key: string) {
-    for (const cat of Object.keys(TECH_CATALOG) as TechCategory[]) {
-      const found = TECH_CATALOG[cat].find((t) => t.key === key);
-      if (found) return { ...found, category: cat };
-    }
-    return null;
   }
 
   useEffect(() => {
@@ -1037,7 +1030,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
                 ))}
               </div>
             )}
-            {flowMode !== "DIAGRAM" && (
+            {/* {flowMode !== "DIAGRAM" && ( */}
               <button
                 onClick={saveUserFlowText}
                 disabled={savingText}
@@ -1045,7 +1038,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
               >
                 {savingText ? "Saving..." : "Save text"}
               </button>
-            )}
+            {/* )} */}
           </div>
         )}
 
@@ -1056,7 +1049,7 @@ export function UserFlowDiagramPanel({ appId }: { appId: string }) {
               nodes={nodes}
               edges={edges}
               defaultEdgeOptions={defaultEdgeOptions}
-              connectionLineType="smoothstep"
+              connectionLineType={ConnectionLineType.SmoothStep}
               connectionRadius={30}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}

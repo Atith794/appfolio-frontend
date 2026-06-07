@@ -13,7 +13,6 @@ export function ScreenshotUploader({ appId }: { appId: string }) {
     if (!token) return;
     const fileHash = await getFileHash(file);
     // 1. get signature
-    // const sigRes = await fetch("http://localhost:4000/uploads/cloudinary-signature", {
     const sigRes = await apiFetch("/uploads/cloudinary-signature", {
       method: "POST",
       headers: {
@@ -26,7 +25,6 @@ export function ScreenshotUploader({ appId }: { appId: string }) {
       })
     });
     const sig = await sigRes.json();
-    // console.log("Signature api_key:",sig);
     // 2. upload to cloudinary
     const form = new FormData();
     form.append("file", file);
@@ -39,8 +37,6 @@ export function ScreenshotUploader({ appId }: { appId: string }) {
     form.append("transformation", sig.transformation);
     const uploadRes = await axios.post(
       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-    //   `${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}`,
-    //   `cloudinary://226893994726635:EW9A5SHJDsfo4_FGy599-SxvZ3w@dw6fuieud`,
       form
     );
 

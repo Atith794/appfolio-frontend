@@ -231,8 +231,6 @@ export function WalkthroughPanel({ appId }: { appId: string }) {
                       cursor: "zoom-in"
                       }}
                       onClick={() => {
-                        // setSelectedStep(s);
-                        // setViewerIndex(idx);
                         setViewerIndex(imgIndex);
                         setViewerOpen(true);
                       }}
@@ -272,37 +270,6 @@ export function WalkthroughPanel({ appId }: { appId: string }) {
       {!loading && sorted.length === 0 ? (
         <p style={{ marginTop: 10, color: "#666" }}>No steps yet. Add 3–6 key steps.</p>
       ) : null}
-      {/* <ImageViewerModal
-        open={viewerOpen && !!selectedStep?.imageUrl}
-        imageUrl={selectedStep?.imageUrl || ""}
-        onClose={() => {
-          setViewerOpen(false);
-          setSelectedStep(null);
-        }}
-        onSaveCrop={async (cropPixels) => {
-          if (!selectedStep?.imageUrl) return;
-
-          const token = await getToken();
-          if (!token) return;
-
-          const newUrl = makeCroppedCloudinaryUrl(selectedStep.imageUrl, cropPixels);
-
-          const data = await apiFetch(`/apps/${appId}/walkthrough/${selectedStep._id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              imageUrl: newUrl
-            })
-          });
-
-          setSteps((data as any).walkthrough || []);
-          setViewerOpen(false);
-          setSelectedStep(null);
-        }}
-      /> */}
       <ImageViewerModal
         open={viewerOpen}
         images={stepImageUrls}

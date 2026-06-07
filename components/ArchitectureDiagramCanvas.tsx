@@ -11,6 +11,7 @@ import ReactFlow, {
   MarkerType,
   SelectionMode,
   ReactFlowInstance,
+  ConnectionLineType
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -87,7 +88,7 @@ export default function ArchitectureDiagramCanvas({
         nodes={nodes}
         edges={edges}
         defaultEdgeOptions={defaultEdgeOptions}
-        connectionLineType="smoothstep"
+        connectionLineType={ConnectionLineType.SmoothStep}
         fitView={!viewport}
         nodesDraggable={editable}
         nodesConnectable={editable}
