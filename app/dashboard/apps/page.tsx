@@ -70,7 +70,6 @@ export default function AppsPage() {
   const router = useRouter();
 
   const safeApps = Array.isArray(apps) ? apps : [];
-
   const filteredApps = safeApps.filter((a) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
@@ -92,6 +91,7 @@ export default function AppsPage() {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
+        console.log("data in icons heroi:",data)
         // setApps((data as any).apps || []);
         // setUsername((data as any).user.username);
         const response = data as any;
@@ -113,6 +113,7 @@ export default function AppsPage() {
       }
     })();
   }, [getToken]);
+
 
   return (
     <main style={{ padding: 12 }}>
@@ -159,7 +160,7 @@ export default function AppsPage() {
         {filteredApps.map((a) => (
           <div
             key={a._id}
-            className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-[12px] md:p-[24px] lg:p-[24px] md:flex lg:flex items-center hover:border-primary/50 hover:bg-primary/5 transition-all"
+            className="group border-2 border-dashed border-primary/50 rounded-xl p-[12px] md:p-[24px] lg:p-[24px] md:flex lg:flex items-center hover:border-primary hover:bg-primary/5 transition-all"
           >
             <div
               style={{
@@ -231,18 +232,35 @@ export default function AppsPage() {
           </div>
         ) : null}
         {/* Add new app */}
-        <div style={{ marginTop: 12 }}>
+        {/* <div style={{ marginTop: 12 }}>
           <Link href="/dashboard/apps/new">
-            <div className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-[24px] md:p-[48px] lg:p-[64px] flex items-center justify-center gap-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-              <div className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                {/* <PlusCircle size={48} /> */}
+            <div className="group border-2 border-dashed border-primary/50 rounded-xl p-[24px] md:p-[48px] lg:p-[64px] flex items-center justify-center gap-4 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+              <div className="size-8 rounded-full bg-white text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
               </div>
-              <div className="text-left">
+              <div className="text-left flex flex-col align-center justify-around">
                 <p className="text-base font-bold text-primary dark:text-white font-serif">
                   Add new app
                 </p>
-                <p className="text-sm sm:text-sm text-slate-500 dark:text-slate-400 font-serif">
+                <p className="text-sm sm:text-sm text-slate-500 dark:text-slate-400 font-serif px-0">
+                  Create an App-portfolio
+                </p>
+              </div>
+            </div>
+          </Link>
+        </div> */}
+        <div style={{ marginTop: 12 }}>
+          <Link href="/dashboard/apps/new">
+            <div className="group border-2 border-dashed border-primary/50 rounded-xl p-[24px] md:p-[48px] lg:p-[64px] flex items-center justify-center gap-4 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+              <div className="size-8 rounded-full bg-white text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+              </div>
+              {/* Fixed text container below */}
+              <div className="flex flex-col text-left mb-6">
+                <p className="text-base font-bold text-primary dark:text-white font-serif">
+                  Add new app
+                </p>
+                <p className="text-sm text-primary dark:text-slate-400 font-serif">
                   Create an App-portfolio
                 </p>
               </div>

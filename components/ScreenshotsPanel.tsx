@@ -592,7 +592,7 @@ export function ScreenshotsPanel({ appId }: { appId: string }) {
                   <div
                     ref={setNodeRef}
                     style={style}
-                    className={`group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-6 lg:p-6 hover:border-primary/50 hover:bg-primary/5 transition-all ${
+                    className={`group border-2 border-dashed border-primary/50 rounded-xl p-3 md:p-6 lg:p-6 hover:border-primary hover:bg-primary/5 transition-all ${
                       isDragging ? "ring-2 ring-primary/30 bg-primary/5" : ""
                     }`}
                   >
