@@ -232,23 +232,6 @@ export default function AppsPage() {
           </div>
         ) : null}
         {/* Add new app */}
-        {/* <div style={{ marginTop: 12 }}>
-          <Link href="/dashboard/apps/new">
-            <div className="group border-2 border-dashed border-primary/50 rounded-xl p-[24px] md:p-[48px] lg:p-[64px] flex items-center justify-center gap-4 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-              <div className="size-8 rounded-full bg-white text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
-              </div>
-              <div className="text-left flex flex-col align-center justify-around">
-                <p className="text-base font-bold text-primary dark:text-white font-serif">
-                  Add new app
-                </p>
-                <p className="text-sm sm:text-sm text-slate-500 dark:text-slate-400 font-serif px-0">
-                  Create an App-portfolio
-                </p>
-              </div>
-            </div>
-          </Link>
-        </div> */}
         <div style={{ marginTop: 12 }}>
           <Link href="/dashboard/apps/new">
             <div className="group border-2 border-dashed border-primary/50 rounded-xl p-[24px] md:p-[48px] lg:p-[64px] flex items-center justify-center gap-4 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
