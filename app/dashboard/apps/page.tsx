@@ -19,7 +19,7 @@ import { DescriptionWithMore } from "./Components/DescriptionWithMore";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_LINK || "http://localhost:3000";
-
+console.log("Public link:",)
 function CopyLink({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
 
