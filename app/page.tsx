@@ -364,6 +364,20 @@ export default function Home() {
                   >
                     Terms
                   </a>
+
+                  <a
+                    className="text-gray-500 text-sm hover:text-black transition-colors font-serif"
+                    href="/refund"
+                  >
+                    Refund and Cancellation Policy
+                  </a>
+
+                  <a
+                    className="text-gray-500 text-sm hover:text-black transition-colors font-serif"
+                    href="/deliverypolicy"
+                  >
+                    Shipping Policy / Service Delivery Policy
+                  </a>
                 </nav>
               </div>
             </div>

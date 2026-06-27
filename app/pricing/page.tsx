@@ -28,6 +28,12 @@ type PricingContext = {
   };
 };
 
+type RazorpayOrderResponse = {
+  order_id: string;
+  amount: number;
+  currency: string;
+};
+
 const FEATURE_ROWS = [
   { key: "apps", label: "Unlimited apps", free: true, pro: true },
   { key: "share", label: "Public share links", free: true, pro: true },
@@ -87,6 +93,10 @@ function formatPrice(amount: number, currency: string) {
   }).format(amount);
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function PricingPage() {
   const router = useRouter();
   const { getToken } = useAuth();
@@ -95,6 +105,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<PricingContext | null>(null);
   const [pricingError, setPricingError] = useState<string | null>(null);
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -105,9 +116,9 @@ export default function PricingPage() {
         const data = await apiFetch("/billing/pricing-context");
         if (!mounted) return;
         setPricing(data);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!mounted) return;
-        setPricingError(e?.message || "Unable to load pricing");
+        setPricingError(getErrorMessage(e, "Unable to load pricing"));
       }
     })();
 
@@ -126,101 +137,110 @@ export default function PricingPage() {
   async function handleUpgrade(nextBilling?: Billing) {
     const chosenBilling = nextBilling ?? billing;
     setLoading(true);
+    setCheckoutMessage(null);
 
     try {
       const token = await getToken();
       if (!token) {
-        alert("Please login to upgrade.");
+        setCheckoutMessage("Please login to upgrade.");
         return;
       }
 
-      const data = await apiFetch("/billing/checkout", {
+      if (!pricing) {
+        setCheckoutMessage("Pricing is still loading. Please try again.");
+        return;
+      }
+
+      const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!key) {
+        setCheckoutMessage("Razorpay key is not configured.");
+        return;
+      }
+
+      const amount =
+        pricing.prices[chosenBilling === "MONTHLY" ? "monthly" : "yearly"] *
+        100;
+
+      const order = (await apiFetch("/api/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ billing: chosenBilling }),
+        body: JSON.stringify({
+          amount,
+          currency: pricing.currency,
+          receipt: `appfolio_${Date.now().toString(36)}`,
+          billing: chosenBilling,
+        }),
+      })) as RazorpayOrderResponse;
+
+      const ok = await loadRazorpay();
+      if (!ok) {
+        setCheckoutMessage("Razorpay SDK failed to load.");
+        return;
+      }
+
+      if (!window.Razorpay) {
+        setCheckoutMessage("Razorpay SDK failed to initialize.");
+        return;
+      }
+
+      const rzp = new window.Razorpay({
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "AppShelves Pro",
+        description:
+          chosenBilling === "MONTHLY" ? "Pro Monthly" : "Pro Yearly",
+        modal: {
+          ondismiss: () => {
+            setCheckoutMessage("Payment cancelled.");
+          },
+        },
+        handler: async (resp: RazorpayPaymentResponse) => {
+          try {
+            const freshToken = await getToken();
+            if (!freshToken) {
+              setCheckoutMessage("Session expired. Please login again.");
+              return;
+            }
+
+            await apiFetch("/api/verify-payment", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${freshToken}`,
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_signature: resp.razorpay_signature,
+              }),
+            });
+
+            setCheckoutMessage("Payment verified.");
+            router.push("/dashboard");
+            router.refresh();
+          } catch (err: unknown) {
+            setCheckoutMessage(
+              getErrorMessage(
+                err,
+                "Payment completed, but verification failed.",
+              ),
+            );
+          }
+        },
       });
 
-      if (data?.alreadyPro) {
-        alert("You are already Pro");
-        router.push("/dashboard");
-        return;
-      }
+      rzp.on("payment.failed", function (resp: RazorpayPaymentFailedResponse) {
+        setCheckoutMessage(resp?.error?.description || "Payment failed.");
+      });
 
-      if (data?.provider === "razorpay") {
-
-        const ok = await loadRazorpay();
-        if (!ok) {
-          alert("Razorpay SDK failed to load");
-          return;
-        }
-
-        const rzp = new (window as any).Razorpay({
-          key: data.keyId,
-          subscription_id: data.subscriptionId,
-          name: "AppShelves Pro",
-          description:
-            chosenBilling === "MONTHLY" ? "Pro Monthly" : "Pro Yearly",
-
-          handler: async (resp: any) => {
-            console.log("RAZORPAY HANDLER FIRED");
-            console.log("Razorpay response:", resp);
-
-            try {
-              const freshToken = await getToken();
-
-              console.log("Fresh token exists:", !!freshToken);
-
-              if (!freshToken) {
-                alert("Session expired. Please login again.");
-                return;
-              }
-
-              console.log("Calling verify-subscription API...");
-
-              const verifyResponse = await apiFetch(
-                "/billing/razorpay/verify-subscription",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${freshToken}`,
-                  },
-                  body: JSON.stringify(resp),
-                },
-              );
-
-              console.log("Verify subscription response:", verifyResponse);
-
-              router.push("/dashboard");
-              router.refresh();
-            } catch (err: any) {
-              console.error("Verify subscription failed:", err);
-              alert(
-                err?.message || "Payment completed, but verification failed",
-              );
-            }
-          },
-        });
-
-        rzp.on("payment.failed", function (resp: any) {
-          console.error("Razorpay payment failed:", resp);
-          alert(resp?.error?.description || "Payment failed");
-        });
-
-        rzp.open();
-        return;
-      }
-
-      if (data?.provider === "stripe" && data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      throw new Error(data?.message || "Invalid checkout response");
-    } catch (e: any) {
-      alert(e?.message || "Upgrade failed");
+      rzp.open();
+    } catch (e: unknown) {
+      setCheckoutMessage(getErrorMessage(e, "Upgrade failed."));
     } finally {
       setLoading(false);
     }
@@ -310,6 +330,12 @@ export default function PricingPage() {
         <p className="mt-4 text-sm font-mono text-slate-500">
           Prices shown for your region in {pricing.currency}.
         </p>
+
+        {checkoutMessage ? (
+          <p className="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+            {checkoutMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="mt-8">
